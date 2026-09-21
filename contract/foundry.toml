@@ -16,3 +16,4 @@ tab_width = 4
 
 [rpc_endpoints]
 bnb_testnet = "${BNB_TESTNET_RPC_URL}"
+opbnb_testnet = "${OPBNB_TESTNET_RPC_URL}"

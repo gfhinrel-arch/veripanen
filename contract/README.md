@@ -32,11 +32,28 @@ Required environment variables:
 | `ORACLE_ADDRESS` | Trusted AI agent oracle wallet |
 | `BNB_TESTNET_RPC_URL` | BNB Smart Chain Testnet RPC |
 
+**Testnet only.** Chain ID 97 (BNB Smart Chain Testnet) or 5611 (opBNB Testnet). Verify the chain ID
+before broadcasting; never deploy to mainnet.
+
 ```bash
+# BNB Smart Chain Testnet (chain 97) — with explorer verification
 forge script script/Deploy.s.sol \
-  --rpc-url "$BNB_TESTNET_RPC_URL" \
-  --broadcast
+  --rpc-url bnb_testnet \
+  --broadcast \
+  --verify \
+  --etherscan-api-key "$BSCSCAN_API_KEY"
+
+# opBNB Testnet (chain 5611)
+forge script script/Deploy.s.sol \
+  --rpc-url opbnb_testnet \
+  --broadcast \
+  --verify \
+  --etherscan-api-key "$BSCSCAN_API_KEY"
 ```
+
+`--rpc-url bnb_testnet` uses the alias in `foundry.toml`, which reads `BNB_TESTNET_RPC_URL` from the
+environment. Verification is a separate concern: a `--verify` flag does not by itself prove the
+contract is verified — confirm on the explorer.
 
 For a local dry run against Anvil:
 
