@@ -222,6 +222,37 @@ Deployment TX:<filled in after deployment>
 9. Anyone, without a wallet, opens **Public ledger** and inspects every listing, every grade,
    every verification, and the full event timeline — read straight from the chain.
 
+## Verified end-to-end (local chain)
+
+Every scenario below was run against a real contract with real transactions. The script is
+`agent/scripts/demo.js`; the machine-readable output is written to `agent/evidence/anvil-demo.json`.
+
+```bash
+# terminal 1
+anvil
+
+# terminal 2
+cd contract && forge script script/Deploy.s.sol \
+  --rpc-url http://127.0.0.1:8545 --broadcast
+
+# terminal 3
+cd agent && node scripts/demo.js
+```
+
+| Scenario | Result |
+| --- | --- |
+| Happy path: create → grade → fund → ship → verify matched | `Completed`, farmer paid, escrow back to 0 |
+| Mismatch: received goods differ | `Disputed`, escrow stays locked, owner can resolve |
+| Timeout: buyer goes quiet, deadline passes | early claim reverts, post-deadline claim pays the farmer |
+| Unauthorized: farmer / buyer / outsider call `postGrade` | all revert (`NotOracle`), the real oracle still succeeds |
+
+The AI stages were exercised with the live model as well:
+
+| Step | Model output | On-chain |
+| --- | --- | --- |
+| Stage 1 grading | `grade C, confidence 25%, 4 reasons` | `postGrade` confirmed |
+| Stage 2 verification | `matched true, confidence 90%, no differences` | `postDeliveryVerification` confirmed, listing `Completed` |
+
 ## Security considerations
 
 - **Oracle-gated writes.** Only the configured oracle address can post grades or verifications.

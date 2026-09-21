@@ -1,0 +1,104 @@
+{
+  "generatedAt": "2026-09-21T05:37:00.388Z",
+  "chain": {
+    "id": 31337,
+    "name": "Anvil (local, for development)",
+    "rpc": "http://127.0.0.1:8545"
+  },
+  "contract": "0x5FbDB2315678afecb367f032d93F642f64180aa3",
+  "accounts": {
+    "farmer": "0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266",
+    "oracle": "0x70997970C51812dc3A010C7d01b50e0d17dc79C8",
+    "buyer": "0x3C44CdDdB6a900fa2b585dd299e03d12FA4293BC",
+    "outsider": "0x90F79bf6EB2c4f870365E785982E1f101E93b906"
+  },
+  "scenarios": [
+    {
+      "scenario": "happy-path",
+      "step": "createListing",
+      "listingId": 1,
+      "tx": "0x658e3453c65c2f1e9e65514033a6ab3890a706e180ffd08c466836b1d57b3c89"
+    },
+    {
+      "scenario": "happy-path",
+      "step": "postGrade",
+      "tx": "0xe55c8c4903d3f447768900a0019c6adf0379f384b75432a55f54f60308a8c29c"
+    },
+    {
+      "scenario": "happy-path",
+      "step": "fundEscrow",
+      "tx": "0x988bc1cca8dffd8bd0e11724199e68faa78143e2c694edcbd4b2b31ed49aa0cc"
+    },
+    {
+      "scenario": "happy-path",
+      "step": "markShipped",
+      "tx": "0x6556d3583eae8761dda9c6520caa321fcf7c11871cecc454946c9e2765ef28aa"
+    },
+    {
+      "scenario": "happy-path",
+      "step": "postDeliveryVerification",
+      "tx": "0x9d76629a6c3d96fef4258587d77348f04c4157dce041551d857439f1ead5f08c",
+      "matched": true,
+      "status": "Completed"
+    },
+    {
+      "scenario": "happy-path",
+      "step": "farmer-paid",
+      "deltaWei": "50000000000000000"
+    },
+    {
+      "scenario": "mismatch",
+      "step": "postDeliveryVerification",
+      "tx": "0x1d3aa231df25bfd2f3237990d18a02d8a5be9bfc6dcca3d726ee4ea556e40493",
+      "matched": false,
+      "status": "Disputed"
+    },
+    {
+      "scenario": "mismatch",
+      "step": "escrow-locked",
+      "balanceWei": "30000000000000000"
+    },
+    {
+      "scenario": "mismatch",
+      "step": "resolveDispute",
+      "tx": "0x6c33594f773a007ab244f5e301a21e0985cea5a06ffbbb38883deb050b772e47",
+      "deltaWei": "29944612980623584"
+    },
+    {
+      "scenario": "timeout",
+      "step": "early-claim-reverted",
+      "reverted": true
+    },
+    {
+      "scenario": "timeout",
+      "step": "claimAfterTimeout",
+      "tx": "0xafc10f6e39c807210a57e0ed1a734d67711b0a9fe7642ffb725d9fe2ebf059df",
+      "status": "Completed",
+      "deltaWei": "19950395342732324"
+    },
+    {
+      "scenario": "unauthorized",
+      "step": "outsiders-blocked",
+      "results": [
+        {
+          "role": "farmer",
+          "reverted": true
+        },
+        {
+          "role": "buyer",
+          "reverted": true
+        },
+        {
+          "role": "outsider",
+          "reverted": true
+        }
+      ]
+    },
+    {
+      "scenario": "unauthorized",
+      "step": "oracle-accepted",
+      "tx": "0xed2f61076deaa1eedb0d348d5e0c3e4c9158c0ec043e2b34870f5881c59f3b46",
+      "grade": "A"
+    }
+  ]
+}
