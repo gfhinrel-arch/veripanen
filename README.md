@@ -171,6 +171,12 @@ Fill in:
 | `PINATA_JWT` | Pinata token for real IPFS pinning |
 | `MIN_CONFIDENCE` | Reject-and-log threshold (default 70) |
 
+> **AI provider note.** The `GLM_*` variable names are historical. They point at the
+> **9router gateway** (`GLM_BASE_URL=https://api.thirtystore.com/v1`), and the models are named
+> with the `thirty/` prefix, e.g. `thirty/deepseek-v4-flash`. To change the model, edit `GLM_MODELS`;
+> the on-chain verification logic does not change, because the smart contract never calls the AI
+> directly — it only trusts the configured oracle address to report the result.
+
 ```bash
 npm start          # HTTP API on :8787
 npm test           # validation unit tests
