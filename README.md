@@ -196,8 +196,48 @@ npm run dev             # http://localhost:5173
 
 ## Environment variables
 
-Never commit `.env`. All three are covered by `.gitignore`. The oracle private key and the AI API
-key exist only in the agent's server-side environment; the frontend bundle contains neither.
+Never commit `.env`. Every `.env` is covered by `.gitignore`; only `.env.example` is tracked. Copy
+each example and fill it in locally:
+
+- `contract/.env` — `PRIVATE_KEY`, `ORACLE_ADDRESS`, `BNB_TESTNET_RPC_URL`, and optionally
+  `OPBNB_TESTNET_RPC_URL`.
+- `agent/.env` — `GLM_API_KEY`, `ORACLE_PRIVATE_KEY`, `CONTRACT_ADDRESS`, `BNB_TESTNET_RPC_URL`,
+  `MIN_CONFIDENCE`, and `PINATA_JWT`.
+- `frontend/.env` — `VITE_CONTRACT_ADDRESS`, `VITE_BNB_TESTNET_RPC_URL`, `VITE_AGENT_URL`, and
+  `VITE_WALLETCONNECT_PROJECT_ID`.
+
+### WalletConnect
+
+`VITE_WALLETCONNECT_PROJECT_ID` comes from [WalletConnect Cloud](https://cloud.reown.com): create a
+project, copy its project id. It is only needed for the WalletConnect QR option — injected wallets
+(MetaMask, Bitget) work without it. Never guess or reuse someone else's project id.
+
+### Pinata
+
+`PINATA_JWT` is required for IPFS upload through Pinata. Without it the agent falls back to inline
+data URLs (fine for local demos, not for production). Create a JWT in the Pinata dashboard. Never
+commit it.
+
+### Oracle key boundary
+
+```
+Frontend  ──user/farmer/buyer transaction──>  HarvestEscrow
+Agent server ──ORACLE_PRIVATE_KEY──> postGrade / postDeliveryVerification ──> HarvestEscrow
+```
+
+The frontend never holds or signs with the oracle private key. Only the agent's server-side
+environment has it.
+
+### Rotate before submission
+
+If these credentials were exposed during development, rotate them before submission:
+
+- deployer private key (`contract/.env` `PRIVATE_KEY`)
+- oracle private key (`agent/.env` `ORACLE_PRIVATE_KEY` and `contract/.env` `ORACLE_ADDRESS`)
+- `PINATA_JWT`
+- `GLM_API_KEY`
+
+The Anvil default keys in `agent/scripts/demo.js` are public, worthless, local-only test keys.
 
 ## Contract address
 

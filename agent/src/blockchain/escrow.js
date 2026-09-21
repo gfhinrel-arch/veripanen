@@ -3,13 +3,19 @@ import { privateKeyToAccount } from "viem/accounts";
 import { config, assertChainConfigured } from "../config.js";
 import { logEvent } from "../logs/logger.js";
 
+// Local development uses Anvil (31337). Anything else targets BNB Testnet (97).
+// A chain-id mismatch makes every write fail, so this must follow the RPC.
+const isLocal = /^https?:\/\/(127\.0\.0\.1|localhost)/.test(config.chain.rpcUrl);
+
 export const bnbTestnet = defineChain({
-  id: 97,
-  name: "BNB Smart Chain Testnet",
+  id: isLocal ? 31337 : 97,
+  name: isLocal ? "Anvil Local" : "BNB Smart Chain Testnet",
   nativeCurrency: { name: "tBNB", symbol: "tBNB", decimals: 18 },
   rpcUrls: { default: { http: [config.chain.rpcUrl] } },
   blockExplorers: {
-    default: { name: "BscScan Testnet", url: "https://testnet.bscscan.com" },
+    default: isLocal
+      ? { name: "Local", url: "http://127.0.0.1:8545" }
+      : { name: "BscScan Testnet", url: "https://testnet.bscscan.com" },
   },
   testnet: true,
 });
