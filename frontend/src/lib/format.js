@@ -75,3 +75,5 @@ export function gatewayUrl(uri) {
   }
   return uri;
 }
+
+export { isResolvableRecordUri } from "./uri.js";

@@ -14,6 +14,7 @@ import {
   shortAddress,
   gatewayUrl,
   explorerAddress,
+  isResolvableRecordUri,
 } from "../../lib/format.js";
 import { StatusChip, GradeBadge, ConfidenceBar, Button, InlineError } from "../ui.jsx";
 
@@ -66,7 +67,7 @@ export function ListingDetail({ listing, onChanged }) {
             { label: "Confidence", value: <ConfidenceBar value={listing.gradeConfidence} /> },
           ]}
           footer={
-            listing.gradeReasonURI ? (
+            isResolvableRecordUri(listing.gradeReasonURI) ? (
               <a
                 href={gatewayUrl(listing.gradeReasonURI)}
                 target="_blank"
@@ -75,6 +76,11 @@ export function ListingDetail({ listing, onChanged }) {
               >
                 open AI reasoning record
               </a>
+            ) : listing.gradeReasonURI ? (
+              <p className="text-[11px] leading-relaxed text-ink-400">
+                Reasoning stored as <span className="font-mono">{listing.gradeReasonURI}</span> — a
+                legacy placeholder with no retrievable payload.
+              </p>
             ) : null
           }
         />
@@ -106,7 +112,7 @@ export function ListingDetail({ listing, onChanged }) {
             },
           ]}
           footer={
-            listing.deliveryReasonURI ? (
+            isResolvableRecordUri(listing.deliveryReasonURI) ? (
               <a
                 href={gatewayUrl(listing.deliveryReasonURI)}
                 target="_blank"
@@ -115,6 +121,11 @@ export function ListingDetail({ listing, onChanged }) {
               >
                 open delivery reasoning record
               </a>
+            ) : listing.deliveryReasonURI ? (
+              <p className="text-[11px] leading-relaxed text-ink-400">
+                Reasoning stored as <span className="font-mono">{listing.deliveryReasonURI}</span> —
+                a legacy placeholder with no retrievable payload.
+              </p>
             ) : null
           }
         />
