@@ -1,6 +1,6 @@
 import { useCallback } from "react";
 import { useConfig } from "wagmi";
-import { getAccount, getChainId } from "@wagmi/core";
+import { getAccount } from "@wagmi/core";
 
 import { activeChain } from "../config/chain.js";
 import { runPreflight, describeTxError } from "./txGuard.js";
@@ -12,6 +12,10 @@ import { runPreflight, describeTxError } from "./txGuard.js";
  * (wagmi's cached values can be stale right after a MetaMask switch) and throws
  * if the chain or account is wrong. `mapError(err)` turns a write failure into an
  * actionable message; callers still console.error the original for debugging.
+ *
+ * `getAccount` returns the connector's current `chainId`, which is the live value
+ * we need. Do not call `getChainId(config)` here: it invokes
+ * `connector.getChainId()`, which injected/RainbowKit connectors do not implement.
  */
 export function useWalletGuard() {
   const config = useConfig();
@@ -19,11 +23,10 @@ export function useWalletGuard() {
   const guard = useCallback(
     (context = "Transaksi") => {
       const { address, chainId } = getAccount(config);
-      const liveChainId = getChainId(config) ?? chainId;
       try {
         return runPreflight({
           currentAddress: address,
-          currentChainId: liveChainId,
+          currentChainId: chainId,
           expectedChainId: activeChain.id,
         });
       } catch (err) {
