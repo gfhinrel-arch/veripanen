@@ -1,9 +1,11 @@
+import { useState } from "react";
 import { useAccount, useWriteContract } from "wagmi";
 import { motion } from "motion/react";
 import { Hash, Certificate, Package, TruckIcon } from "@phosphor-icons/react";
 
 import { harvestEscrowAbi } from "../../lib/abi.js";
 import { CONTRACT_ADDRESS, STATUS, STATUS_TONE } from "../../config/chain.js";
+import { useWalletGuard } from "../../lib/useWalletGuard.js";
 import {
   formatPrice,
   formatWeight,
@@ -13,11 +15,10 @@ import {
   gatewayUrl,
   explorerAddress,
 } from "../../lib/format.js";
-import { StatusChip, GradeBadge, ConfidenceBar, Button } from "../ui.jsx";
+import { StatusChip, GradeBadge, ConfidenceBar, Button, InlineError } from "../ui.jsx";
 
 export function ListingDetail({ listing, onChanged }) {
   const { address } = useAccount();
-  const { writeContractAsync } = useWriteContract();
   const status = Number(listing.status);
   const meta = STATUS[status];
 
@@ -177,7 +178,6 @@ export function ListingDetail({ listing, onChanged }) {
           isFarmer={isFarmer}
           isBuyer={isBuyer}
           deadlinePassed={deadlinePassed}
-          writeContractAsync={writeContractAsync}
           onChanged={onChanged}
         />
       </div>
@@ -216,19 +216,26 @@ function Cell({ label, value, mono }) {
   );
 }
 
-function Actions({ listing, status, isFarmer, isBuyer, deadlinePassed, writeContractAsync, onChanged }) {
-  const run = async (functionName, args = [listing.listingId], value) => {
+function Actions({ listing, status, isFarmer, isBuyer, deadlinePassed, onChanged }) {
+  const { writeContractAsync } = useWriteContract();
+  const { guard, mapError } = useWalletGuard();
+  const [error, setError] = useState(null);
+
+  const run = async (context, functionName, value) => {
+    setError(null);
     try {
+      const { address: from } = guard(context);
       await writeContractAsync({
         address: CONTRACT_ADDRESS,
         abi: harvestEscrowAbi,
         functionName,
-        args,
+        args: [listing.listingId],
+        account: from,
         ...(value !== undefined ? { value } : {}),
       });
       await onChanged?.();
     } catch (err) {
-      console.error(err);
+      setError(mapError(err, context));
     }
   };
 
@@ -236,7 +243,7 @@ function Actions({ listing, status, isFarmer, isBuyer, deadlinePassed, writeCont
 
   if (status === 2 && isFarmer) {
     buttons.push(
-      <Button key="ship" variant="primary" onClick={() => run("markShipped")}>
+      <Button key="ship" variant="primary" onClick={() => run("Mark shipped", "markShipped")}>
         <TruckIcon size={15} />
         Mark shipped
       </Button>,
@@ -245,7 +252,7 @@ function Actions({ listing, status, isFarmer, isBuyer, deadlinePassed, writeCont
 
   if (status === 3 && isBuyer) {
     buttons.push(
-      <Button key="confirm" variant="accent" onClick={() => run("confirmReceipt")}>
+      <Button key="confirm" variant="accent" onClick={() => run("Confirm receipt", "confirmReceipt")}>
         Confirm receipt
       </Button>,
     );
@@ -253,9 +260,22 @@ function Actions({ listing, status, isFarmer, isBuyer, deadlinePassed, writeCont
 
   if (status === 3 && isFarmer && deadlinePassed) {
     buttons.push(
-      <Button key="claim" variant="accent" onClick={() => run("claimAfterTimeout")}>
+      <Button
+        key="claim"
+        variant="accent"
+        onClick={() => run("Claim after timeout", "claimAfterTimeout")}
+      >
         Claim after timeout
       </Button>,
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="flex flex-col gap-3">
+        {buttons.length > 0 && <div className="flex flex-wrap gap-3">{buttons}</div>}
+        <InlineError message={error} />
+      </div>
     );
   }
 

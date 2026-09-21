@@ -1,19 +1,35 @@
 import { defineChain } from "viem";
 
-export const bnbTestnet = defineChain({
-  id: 97,
-  name: "BNB Smart Chain Testnet",
+const RPC_URL =
+  import.meta.env.VITE_BNB_TESTNET_RPC_URL || "https://data-seed-prebsc-1-s1.bnbchain.org:8545";
+
+// Anvil is the local development chain. When the RPC points at localhost we must
+// target chain 31337, not 97, or every write fails with a chain-id mismatch.
+const IS_LOCAL = /^https?:\/\/(127\.0\.0\.1|localhost)/.test(RPC_URL);
+
+const EXPLORER_LOCAL = { name: "Local", url: "http://127.0.0.1:8545" };
+
+export const activeChain = defineChain({
+  id: IS_LOCAL ? 31337 : 97,
+  name: IS_LOCAL ? "Anvil Local" : "BNB Smart Chain Testnet",
   nativeCurrency: { name: "tBNB", symbol: "tBNB", decimals: 18 },
-  rpcUrls: {
-    default: {
-      http: [import.meta.env.VITE_BNB_TESTNET_RPC_URL || "https://data-seed-prebsc-1-s1.bnbchain.org:8545"],
-    },
-  },
+  rpcUrls: { default: { http: [RPC_URL] } },
   blockExplorers: {
-    default: { name: "BscScan Testnet", url: "https://testnet.bscscan.com" },
+    default: IS_LOCAL
+      ? EXPLORER_LOCAL
+      : { name: "BscScan Testnet", url: "https://testnet.bscscan.com" },
   },
   testnet: true,
 });
+
+export const isLocalChain = IS_LOCAL;
+
+export const EXPLORER_BASE = IS_LOCAL
+  ? ""
+  : "https://testnet.bscscan.com";
+
+/** Kept as an alias so existing imports keep working. */
+export const bnbTestnet = activeChain;
 
 export const CONTRACT_ADDRESS = import.meta.env.VITE_CONTRACT_ADDRESS || "";
 

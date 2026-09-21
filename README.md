@@ -304,6 +304,31 @@ validates that output, and then acts on-chain through a dedicated oracle wallet 
 the transaction workflow. The two-stage verification is the product, and it cannot be reduced to a
 single prompt-and-answer.
 
+## Troubleshooting
+
+Every browser write runs through one preflight (`frontend/src/lib/txGuard.js`): it re-reads the live
+account and chain from the wallet provider, blocks the transaction on a wrong chain or missing
+account, and maps nonce/RPC failures to an actionable message.
+
+### MetaMask nonce / RPC error after restarting Anvil
+
+Anvil resets its local chain state when restarted, while wallet state may still contain transaction
+history from the previous local chain session. If a nonce-related error appears:
+
+1. Confirm MetaMask is connected to the expected local/test network.
+2. Confirm the active account is the intended account.
+3. Reset the wallet's local activity/nonce data using MetaMask's current developer/reset tools.
+4. Reconnect the wallet.
+5. Try the transaction again.
+
+The app shows the same guidance inline when it detects `nonce too low`, `nonce too high`, or
+`replacement transaction underpriced`. Do not use these steps on a mainnet account.
+
+### "Invalid parameters were provided to the RPC method"
+
+This generic MetaMask message almost always means the wallet is on the wrong chain. Confirm both the
+app and the wallet point at the same network (local Anvil `31337`, or BNB Testnet `97`), then retry.
+
 ## License
 
 MIT

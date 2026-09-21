@@ -1,4 +1,4 @@
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import { useAccount, useWriteContract } from "wagmi";
 import { motion } from "motion/react";
@@ -6,9 +6,10 @@ import { Storefront, ArrowUpRight } from "@phosphor-icons/react";
 
 import { harvestEscrowAbi } from "../../lib/abi.js";
 import { CONTRACT_ADDRESS } from "../../config/chain.js";
+import { useWalletGuard } from "../../lib/useWalletGuard.js";
 import { useAllListings } from "../../hooks/useListings.js";
 import { formatPrice, formatWeight, shortAddress, gatewayUrl } from "../../lib/format.js";
-import { Button, EmptyState, Skeleton, GradeBadge, ConfidenceBar, StatusChip } from "../ui.jsx";
+import { Button, EmptyState, Skeleton, GradeBadge, ConfidenceBar, StatusChip, InlineError } from "../ui.jsx";
 
 export function OpenListingsPanel() {
   const { listings, isLoading, refetch } = useAllListings({ refetchInterval: 12000 });
@@ -57,21 +58,30 @@ export function OpenListingsPanel() {
 function ListingCard({ listing, index, featured, onFunded }) {
   const { address, isConnected } = useAccount();
   const { writeContractAsync } = useWriteContract();
+  const { guard, mapError } = useWalletGuard();
+  const [error, setError] = useState(null);
+  const [funding, setFunding] = useState(false);
 
   const isOwn = address && listing.farmer.toLowerCase() === address.toLowerCase();
 
   async function fund() {
+    setError(null);
+    setFunding(true);
     try {
+      const { address: from } = guard("Fund escrow");
       await writeContractAsync({
         address: CONTRACT_ADDRESS,
         abi: harvestEscrowAbi,
         functionName: "fundEscrow",
         args: [listing.listingId],
         value: listing.priceWei,
+        account: from,
       });
       await onFunded?.();
     } catch (err) {
-      console.error(err);
+      setError(mapError(err, "fund"));
+    } finally {
+      setFunding(false);
     }
   }
 
@@ -123,19 +133,24 @@ function ListingCard({ listing, index, featured, onFunded }) {
           <Row label="Price" value={formatPrice(listing.priceWei)} strong />
         </dl>
 
-        <div className="mt-auto pt-2">
+        <div className="mt-auto flex flex-col gap-3 pt-2">
           {isOwn ? (
             <StatusChip tone="neutral" label="your listing" />
           ) : (
             <Button
               variant="accent"
               className="w-full"
-              disabled={!isConnected}
+              disabled={!isConnected || funding}
               onClick={fund}
             >
-              {isConnected ? `Fund escrow · ${formatPrice(listing.priceWei)}` : "Connect to fund"}
+              {!isConnected
+                ? "Connect to fund"
+                : funding
+                  ? "Funding…"
+                  : `Fund escrow · ${formatPrice(listing.priceWei)}`}
             </Button>
           )}
+          {error && <InlineError message={error} />}
         </div>
       </div>
     </motion.article>

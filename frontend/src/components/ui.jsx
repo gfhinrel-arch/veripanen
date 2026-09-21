@@ -1,4 +1,5 @@
 import { motion } from "motion/react";
+import { explorerTx } from "../lib/format.js";
 
 export { Button } from "./Button.jsx";
 
@@ -121,16 +122,23 @@ export function TxState({ state }) {
         <span className={`text-[12.5px] font-medium ${info.tone}`}>{info.label}</span>
       </div>
       {state.hash && (
-        <a
-          href={`https://testnet.bscscan.com/tx/${state.hash}`}
-          target="_blank"
-          rel="noreferrer"
-          className="truncate font-mono text-[11px] text-ink-500 underline decoration-ink-300 underline-offset-2 hover:text-ink-800"
-        >
-          {state.hash}
-        </a>
+        <TxHashLink hash={state.hash} />
       )}
       {state.message && <p className="text-[11.5px] text-ink-500">{state.message}</p>}
     </div>
+  );
+}
+
+function TxHashLink({ hash }) {
+  const href = explorerTx(hash);
+  const className =
+    "truncate font-mono text-[11px] text-ink-500 underline decoration-ink-300 underline-offset-2 hover:text-ink-800";
+  if (!href) {
+    return <span className={className}>{hash}</span>;
+  }
+  return (
+    <a href={href} target="_blank" rel="noreferrer" className={className}>
+      {hash}
+    </a>
   );
 }

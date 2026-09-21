@@ -1,4 +1,4 @@
-import { useMemo } from "react";
+import { useState, useMemo } from "react";
 import { Link } from "react-router-dom";
 import { useAccount, useWriteContract } from "wagmi";
 import { motion } from "motion/react";
@@ -6,9 +6,10 @@ import { ArrowUpRight, Truck } from "@phosphor-icons/react";
 
 import { harvestEscrowAbi } from "../../lib/abi.js";
 import { CONTRACT_ADDRESS, STATUS, STATUS_TONE } from "../../config/chain.js";
+import { useWalletGuard } from "../../lib/useWalletGuard.js";
 import { useAllListings } from "../../hooks/useListings.js";
 import { formatPrice, formatWeight, formatCountdown } from "../../lib/format.js";
-import { Button, EmptyState, Skeleton, StatusChip } from "../ui.jsx";
+import { Button, EmptyState, Skeleton, StatusChip, InlineError } from "../ui.jsx";
 import { Plant } from "@phosphor-icons/react";
 
 export function MyListingsPanel() {
@@ -70,6 +71,9 @@ export function MyListingsPanel() {
 
 function ListingRow({ listing, index, onChanged }) {
   const { writeContractAsync } = useWriteContract();
+  const { guard, mapError } = useWalletGuard();
+  const [error, setError] = useState(null);
+  const [busy, setBusy] = useState(false);
   const status = Number(listing.status);
   const meta = STATUS[status];
   const tone = STATUS_TONE[status];
@@ -79,13 +83,24 @@ function ListingRow({ listing, index, onChanged }) {
   const deadlinePassed =
     listing.deliveryDeadline > 0n && Number(listing.deliveryDeadline) * 1000 < Date.now();
 
-  async function action(fn) {
+  async function action(context, functionName) {
+    setError(null);
+    setBusy(true);
     try {
-      const hash = await fn();
+      const { address: from } = guard(context);
+      const hash = await writeContractAsync({
+        address: CONTRACT_ADDRESS,
+        abi: harvestEscrowAbi,
+        functionName,
+        args: [listing.listingId],
+        account: from,
+      });
       await onChanged?.();
       return hash;
     } catch (err) {
-      console.error(err);
+      setError(mapError(err, context));
+    } finally {
+      setBusy(false);
     }
   }
 
@@ -134,16 +149,8 @@ function ListingRow({ listing, index, onChanged }) {
             size="sm"
             variant="quiet"
             className="ml-auto"
-            onClick={() =>
-              action(() =>
-                writeContractAsync({
-                  address: CONTRACT_ADDRESS,
-                  abi: harvestEscrowAbi,
-                  functionName: "markShipped",
-                  args: [listing.listingId],
-                }),
-              )
-            }
+            disabled={busy}
+            onClick={() => action("Mark shipped", "markShipped")}
           >
             <Truck size={14} />
             Mark shipped
@@ -155,21 +162,15 @@ function ListingRow({ listing, index, onChanged }) {
             size="sm"
             variant="accent"
             className="ml-auto"
-            onClick={() =>
-              action(() =>
-                writeContractAsync({
-                  address: CONTRACT_ADDRESS,
-                  abi: harvestEscrowAbi,
-                  functionName: "claimAfterTimeout",
-                  args: [listing.listingId],
-                }),
-              )
-            }
+            disabled={busy}
+            onClick={() => action("Claim escrow", "claimAfterTimeout")}
           >
             Claim escrow
           </Button>
         )}
       </div>
+
+      {error && <InlineError message={error} />}
     </motion.div>
   );
 }

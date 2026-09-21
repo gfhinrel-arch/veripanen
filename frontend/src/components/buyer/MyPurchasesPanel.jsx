@@ -6,6 +6,7 @@ import { Package, ArrowUpRight } from "@phosphor-icons/react";
 
 import { harvestEscrowAbi } from "../../lib/abi.js";
 import { CONTRACT_ADDRESS, STATUS, STATUS_TONE } from "../../config/chain.js";
+import { useWalletGuard } from "../../lib/useWalletGuard.js";
 import { useAllListings } from "../../hooks/useListings.js";
 import { formatPrice, formatWeight, formatCountdown, shortAddress } from "../../lib/format.js";
 import { Button, EmptyState, Skeleton, StatusChip, InlineError, TxState } from "../ui.jsx";
@@ -62,6 +63,7 @@ export function MyPurchasesPanel() {
 
 function PurchaseRow({ listing, onChanged }) {
   const { writeContractAsync } = useWriteContract();
+  const { guard, mapError } = useWalletGuard();
   const [tx, setTx] = useState(null);
   const [error, setError] = useState(null);
 
@@ -72,17 +74,19 @@ function PurchaseRow({ listing, onChanged }) {
   async function confirm() {
     setError(null);
     try {
+      const { address: from } = guard("Confirm receipt");
       const hash = await writeContractAsync({
         address: CONTRACT_ADDRESS,
         abi: harvestEscrowAbi,
         functionName: "confirmReceipt",
         args: [listing.listingId],
+        account: from,
       });
       setTx({ status: "pending", hash });
       await onChanged?.();
       setTx({ status: "success", hash });
     } catch (err) {
-      setError(err.shortMessage || err.message);
+      setError(mapError(err, "confirm"));
       setTx({ status: "error" });
     }
   }

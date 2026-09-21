@@ -1,5 +1,5 @@
 import { getDefaultConfig } from "@rainbow-me/rainbowkit";
-import { bnbTestnet } from "./chain.js";
+import { activeChain } from "./chain.js";
 import { metaMaskWallet, bitgetWallet, injectedWallet, walletConnectWallet, coinbaseWallet, trustWallet } from "@rainbow-me/rainbowkit/wallets";
 
 // WalletConnect Cloud project id. Required ONLY for the WalletConnect QR flow.
@@ -10,7 +10,7 @@ const projectId = import.meta.env.VITE_WALLETCONNECT_PROJECT_ID || "000000000000
 export const wagmiConfig = getDefaultConfig({
   appName: "VeriPanen",
   projectId,
-  chains: [bnbTestnet],
+  chains: [activeChain],
   ssr: false,
   wallets: [
     {

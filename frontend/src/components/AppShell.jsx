@@ -2,6 +2,8 @@ import { NavLink, Outlet } from "react-router-dom";
 import { ConnectButton } from "@rainbow-me/rainbowkit";
 import { motion } from "motion/react";
 import { Plant, Storefront, MagnifyingGlass } from "@phosphor-icons/react";
+import { useAccount, useDisconnect } from "wagmi";
+import { activeChain } from "../config/chain.js";
 
 const NAV = [
   { to: "/", label: "Farmer", icon: Plant },
@@ -31,7 +33,7 @@ function Header() {
             <span className="text-[15px] font-semibold tracking-tight text-ink-950">VeriPanen</span>
           </NavLink>
           <span className="hidden font-mono text-[11px] uppercase tracking-[0.14em] text-ink-400 sm:inline">
-            bnb testnet · 97
+            {activeChain.name} · {activeChain.id}
           </span>
         </div>
 
@@ -71,11 +73,27 @@ function Header() {
             accountStatus={{ smallScreen: "avatar", largeScreen: "full" }}
             showBalance={false}
           />
+          <DisconnectButton />
         </div>
       </div>
 
       <MobileNav />
     </header>
+  );
+}
+
+function DisconnectButton() {
+  const { isConnected } = useAccount();
+  const { disconnect } = useDisconnect();
+  if (!isConnected) return null;
+  return (
+    <button
+      type="button"
+      onClick={() => disconnect()}
+      className="rounded-lg border border-ink-200 px-3 py-2 text-[13px] font-medium text-ink-600 transition-colors duration-200 hover:border-ink-300 hover:text-ink-900"
+    >
+      Disconnect
+    </button>
   );
 }
 

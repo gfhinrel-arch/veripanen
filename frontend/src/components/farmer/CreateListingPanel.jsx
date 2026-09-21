@@ -1,13 +1,14 @@
 import { useMemo, useState } from "react";
-import { useAccount, useWriteContract, usePublicClient } from "wagmi";
+import { useAccount, useWriteContract, usePublicClient, useSwitchChain } from "wagmi";
 import { parseEther } from "viem";
 import { motion, AnimatePresence } from "motion/react";
 import { Sparkle } from "@phosphor-icons/react";
 
 import { harvestEscrowAbi } from "../../lib/abi.js";
-import { CONTRACT_ADDRESS } from "../../config/chain.js";
+import { CONTRACT_ADDRESS, activeChain } from "../../config/chain.js";
 import { Button, InlineError, TxState } from "../ui.jsx";
 import { uploadPhoto, gradeHarvest } from "../../lib/agent.js";
+import { useWalletGuard } from "../../lib/useWalletGuard.js";
 import { Field } from "./Field.jsx";
 import { ImageDropzone } from "./ImageDropzone.jsx";
 import { GradeResultCard } from "./GradeResultCard.jsx";
@@ -18,6 +19,8 @@ export function CreateListingPanel() {
   const { isConnected } = useAccount();
   const publicClient = usePublicClient();
   const { writeContractAsync } = useWriteContract();
+  const { switchChainAsync } = useSwitchChain();
+  const { guard, mapError } = useWalletGuard();
 
   const [form, setForm] = useState(INITIAL);
   const [photo, setPhoto] = useState(null);
@@ -53,6 +56,13 @@ export function CreateListingPanel() {
       const uploaded = await uploadPhoto(photo);
 
       setStep("creating");
+      // Best-effort: nudge MetaMask to the app chain, then enforce it in guard().
+      try {
+        await switchChainAsync({ chainId: activeChain.id });
+      } catch {
+        // Guard below produces the actionable message if the switch was declined.
+      }
+      const { address } = guard("Publish");
       const hash = await writeContractAsync({
         address: CONTRACT_ADDRESS,
         abi: harvestEscrowAbi,
@@ -64,6 +74,8 @@ export function CreateListingPanel() {
           uploaded.hashHex,
           uploaded.uri,
         ],
+        chainId: activeChain.id,
+        account: address,
       });
       setTx({ status: "pending", hash });
 
@@ -85,7 +97,7 @@ export function CreateListingPanel() {
       setGradeResult(graded);
       setStep("done");
     } catch (err) {
-      setError(err.shortMessage || err.message || "Something went wrong.");
+      setError(mapError(err, "publish"));
       setStep("error");
       setTx((t) => (t ? { ...t, status: "error" } : null));
     }

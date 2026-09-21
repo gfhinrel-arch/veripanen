@@ -1,4 +1,5 @@
 import { formatEther, formatUnits } from "viem";
+import { EXPLORER_BASE } from "../config/chain.js";
 
 export function shortAddress(address, size = 4) {
   if (!address || address.length < 10) return address || "";
@@ -55,11 +56,11 @@ export function formatBlockTime(seconds) {
 }
 
 export function explorerTx(hash) {
-  return `https://testnet.bscscan.com/tx/${hash}`;
+  return EXPLORER_BASE ? `${EXPLORER_BASE}/tx/${hash}` : "";
 }
 
 export function explorerAddress(address) {
-  return `https://testnet.bscscan.com/address/${address}`;
+  return EXPLORER_BASE ? `${EXPLORER_BASE}/address/${address}` : "";
 }
 
 export function gatewayUrl(uri) {
