@@ -74,7 +74,6 @@ export function CreateListingPanel() {
           uploaded.hashHex,
           uploaded.uri,
         ],
-        chainId: activeChain.id,
         account: address,
       });
       setTx({ status: "pending", hash });
