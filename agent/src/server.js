@@ -15,7 +15,12 @@ const CORS = {
 };
 
 function send(res, status, payload) {
-  const body = JSON.stringify(payload);
+  // viem receipts carry BigInt fields (blockNumber, gasUsed, ...). Plain
+  // JSON.stringify throws "Do not know how to serialize a BigInt", which
+  // surfaced as a 500 even though the on-chain write had already succeeded.
+  const body = JSON.stringify(payload, (_key, value) =>
+    typeof value === "bigint" ? value.toString() : value,
+  );
   res.writeHead(status, { "Content-Type": "application/json", ...CORS });
   res.end(body);
 }
