@@ -1,0 +1,155 @@
+@import "tailwindcss";
+
+/* ------------------------------------------------------------------ fonts */
+/* Geist Sans + Geist Mono via fontsource-compatible CDN (no Inter). */
+@import url("https://cdn.jsdelivr.net/npm/geist@1.3.1/dist/fonts/geist-sans/style.css");
+@import url("https://cdn.jsdelivr.net/npm/geist@1.3.1/dist/fonts/geist-mono/style.css");
+
+/* --------------------------------------------------------------- tokens */
+@theme {
+  --font-sans: "Geist", ui-sans-serif, system-ui, sans-serif;
+  --font-mono: "Geist Mono", ui-monospace, "SFMono-Regular", monospace;
+
+  /* Neutral base: zinc, warm-leaning. No pure black. */
+  --color-ink-950: #0f0f10;
+  --color-ink-900: #18181b;
+  --color-ink-800: #27272a;
+  --color-ink-700: #3f3f46;
+  --color-ink-500: #71717a;
+  --color-ink-400: #a1a1aa;
+  --color-ink-300: #d4d4d8;
+  --color-ink-200: #e4e4e7;
+  --color-ink-100: #f4f4f5;
+  --color-paper: #f9fafb;
+
+  /* Single accent: field green, desaturated. */
+  --color-leaf-600: #1f7a4d;
+  --color-leaf-500: #279660;
+  --color-leaf-400: #4bb07b;
+  --color-leaf-100: #e3f4ea;
+
+  /* Status hues, all desaturated. */
+  --color-amber-600: #b4700f;
+  --color-amber-100: #fdf1dc;
+  --color-rust-600: #a8432e;
+  --color-rust-100: #fbe8e3;
+
+  --radius-card: 1.75rem;
+  --shadow-diffuse: 0 20px 40px -15px rgb(0 0 0 / 0.06);
+  --shadow-lift: 0 12px 28px -12px rgb(15 15 16 / 0.14);
+}
+
+@layer base {
+  html {
+    -webkit-text-size-adjust: 100%;
+  }
+
+  body {
+    margin: 0;
+    background-color: var(--color-paper);
+    color: var(--color-ink-900);
+    font-family: var(--font-sans);
+    font-feature-settings: "ss01", "cv01";
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+  }
+
+  ::selection {
+    background: var(--color-leaf-100);
+    color: var(--color-ink-950);
+  }
+
+  :focus-visible {
+    outline: 2px solid var(--color-leaf-500);
+    outline-offset: 2px;
+    border-radius: 4px;
+  }
+
+  button {
+    font-family: inherit;
+  }
+}
+
+@layer utilities {
+  /* Tabular numbers for all on-chain data. */
+  .tnum {
+    font-variant-numeric: tabular-nums;
+    font-feature-settings: "tnum";
+  }
+
+  /* Fixed film-grain overlay. Pointer-events-none + fixed so it never repaints
+     during scroll (skill: PERFORMANCE GUARDRAILS). */
+  .grain::after {
+    content: "";
+    position: fixed;
+    inset: 0;
+    z-index: 60;
+    pointer-events: none;
+    opacity: 0.035;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  }
+
+  .card-surface {
+    background: #ffffff;
+    border: 1px solid rgb(228 228 231 / 0.7);
+    border-radius: var(--radius-card);
+    box-shadow: var(--shadow-diffuse);
+  }
+
+  .glass-panel {
+    background: rgb(255 255 255 / 0.72);
+    backdrop-filter: blur(14px) saturate(1.4);
+    border: 1px solid rgb(255 255 255 / 0.6);
+    box-shadow:
+      inset 0 1px 0 rgb(255 255 255 / 0.7),
+      0 10px 30px -12px rgb(15 15 16 / 0.12);
+  }
+
+  /* Skeleton shimmer for loading states. */
+  .shimmer {
+    background: linear-gradient(
+      100deg,
+      var(--color-ink-100) 20%,
+      var(--color-ink-200) 40%,
+      var(--color-ink-100) 60%
+    );
+    background-size: 220% 100%;
+    animation: shimmer 1.6s cubic-bezier(0.16, 1, 0.3, 1) infinite;
+  }
+
+  @keyframes shimmer {
+    from {
+      background-position: 180% 0;
+    }
+    to {
+      background-position: -40% 0;
+    }
+  }
+
+  /* Slow breathing dot for live status. */
+  .breathe {
+    animation: breathe 2.8s cubic-bezier(0.16, 1, 0.3, 1) infinite;
+  }
+
+  @keyframes breathe {
+    0%,
+    100% {
+      opacity: 1;
+      transform: scale(1);
+    }
+    50% {
+      opacity: 0.45;
+      transform: scale(0.82);
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+    }
+  }
+}

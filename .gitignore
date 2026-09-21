@@ -1,0 +1,40 @@
+# Build output
+contract/out/
+contract/cache/
+contract/broadcast/
+
+# Foundry dependencies — restored with `forge install` (see contract/README.md)
+contract/lib/
+
+# Dependencies
+node_modules/
+**/node_modules/
+
+# Environment / secrets
+.env
+.env.*
+!.env.example
+*.key
+*.pem
+keystore/
+
+# Agent runtime
+agent/logs/*.log
+agent/logs/*.jsonl
+agent/cache/
+agent/tmp/
+
+# Frontend build
+frontend/dist/
+frontend/.vite/
+
+# OS / editor
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+*.swp
+
+# Uploads (local image staging)
+agent/tmp/uploads/
+frontend/tmp/

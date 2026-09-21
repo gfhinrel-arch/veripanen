@@ -1,0 +1,16 @@
+{
+  "name": "veripanen-agent",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "VeriPanen off-chain AI agent: harvest grading + delivery verification, posted on-chain via oracle wallet.",
+  "scripts": {
+    "start": "node src/server.js",
+    "grade": "node src/cli.js grade",
+    "verify": "node src/cli.js verify",
+    "test": "node --test src/agent.test.js"
+  },
+  "dependencies": {
+    "viem": "^2.56.8"
+  }
+}
