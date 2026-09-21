@@ -2,7 +2,7 @@ import { NavLink, Outlet } from "react-router-dom";
 import { ConnectButton } from "@rainbow-me/rainbowkit";
 import { motion } from "motion/react";
 import { Plant, Storefront, MagnifyingGlass } from "@phosphor-icons/react";
-import { useAccount, useDisconnect, useSwitchAccount } from "wagmi";
+import { useAccount, useDisconnect } from "wagmi";
 import { activeChain } from "../config/chain.js";
 
 const NAV = [
@@ -73,33 +73,12 @@ function Header() {
             accountStatus={{ smallScreen: "avatar", largeScreen: "full" }}
             showBalance={false}
           />
-          <SwitchAccountButton />
           <DisconnectButton />
         </div>
       </div>
 
       <MobileNav />
     </header>
-  );
-}
-
-// Lets the user move to a different connected account (e.g. the funded Anvil
-// account) without tearing the whole connection down. Opens the connector's own
-// account picker via switchAccount.
-function SwitchAccountButton() {
-  const { isConnected } = useAccount();
-  const { connectors, switchAccount, isPending } = useSwitchAccount();
-  if (!isConnected || connectors.length === 0) return null;
-
-  return (
-    <button
-      type="button"
-      disabled={isPending}
-      onClick={() => switchAccount({ connector: connectors[0] })}
-      className="rounded-lg border border-ink-200 px-3 py-2 text-[13px] font-medium text-ink-600 transition-colors duration-200 hover:border-ink-300 hover:text-ink-900 disabled:opacity-50"
-    >
-      Ganti akun
-    </button>
   );
 }
 

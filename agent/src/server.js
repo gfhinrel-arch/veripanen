@@ -1,7 +1,7 @@
 import { createServer } from "node:http";
 import { readFileSync } from "node:fs";
 import { runGrading, runDeliveryVerification } from "./flows.js";
-import { uploadImage, sniffImageMime } from "./ipfs/pinata.js";
+import { uploadImage, safeMime } from "./ipfs/pinata.js";
 import { logEvent } from "./logs/logger.js";
 import { config } from "./config.js";
 
@@ -116,7 +116,11 @@ const routes = {
       send(res, 404, { error: "photo not found" });
       return;
     }
-    res.writeHead(200, { "Content-Type": sniffImageMime(bytes), ...CORS, "Cache-Control": "no-store" });
+    res.writeHead(200, {
+      "Content-Type": safeMime(bytes),
+      ...CORS,
+      "Cache-Control": "no-store",
+    });
     res.end(bytes);
   },
 };

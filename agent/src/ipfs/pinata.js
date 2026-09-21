@@ -15,7 +15,7 @@ import { logEvent } from "../logs/logger.js";
  */
 export async function uploadImage({ bytes, filename, contentType }) {
   const hashHex = sha256Hex(bytes);
-  const mime = contentType ?? sniffImageMime(bytes);
+  const mime = safeMime(bytes, contentType);
 
   if (!config.ipfs.pinataJwt) {
     const photoURI = saveLocal(bytes, filename, mime);
@@ -53,17 +53,36 @@ export async function uploadImage({ bytes, filename, contentType }) {
 const UPLOAD_DIR = resolve(config.rootDir, "tmp", "uploads");
 
 function extFor(mime) {
+  if (mime === "application/json") return "json";
   if (mime === "image/png") return "png";
   if (mime === "image/webp") return "webp";
   if (mime === "image/gif") return "gif";
   return "jpg";
 }
 
+/**
+ * Each reasoning record is a small JSON blob uploaded with contentType
+ * "application/json". If a caller omits it, detect JSON by its leading byte so we
+ * never store a JSON payload with an image extension (the browser would then try
+ * to render it as a picture and show a broken image).
+ */
+export function safeMime(bytes, contentType) {
+  if (contentType) return contentType;
+  const first = Buffer.from(bytes).subarray(0, 1).toString("utf8");
+  if (first === "{" || first === "[") return "application/json";
+  return sniffImageMime(bytes);
+}
+
 /** Writes bytes under agent/tmp/uploads and returns a short file:// URI. */
 export function saveLocal(bytes, filename, mime) {
   if (!existsSync(UPLOAD_DIR)) mkdirSync(UPLOAD_DIR, { recursive: true });
-  const safeBase = (filename ?? "upload").replace(/[^a-zA-Z0-9._-]/g, "_").slice(0, 40);
-  const name = `${randomUUID()}-${safeBase || "upload"}.${extFor(mime)}`;
+  const ext = extFor(mime);
+  // Drop any existing extension so we never produce "reason.json.json".
+  const base = (filename ?? "upload")
+    .replace(/\.[a-zA-Z0-9]+$/, "")
+    .replace(/[^a-zA-Z0-9._-]/g, "_")
+    .slice(0, 40);
+  const name = `${randomUUID()}-${base || "upload"}.${ext}`;
   const full = resolve(UPLOAD_DIR, name);
   writeFileSync(full, Buffer.from(bytes));
   // Store a forward-slash file URL so it survives JSON and non-Windows readers.
