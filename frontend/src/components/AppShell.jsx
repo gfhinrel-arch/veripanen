@@ -2,7 +2,7 @@ import { NavLink, Outlet } from "react-router-dom";
 import { ConnectButton } from "@rainbow-me/rainbowkit";
 import { motion } from "motion/react";
 import { Plant, Storefront, MagnifyingGlass } from "@phosphor-icons/react";
-import { useAccount, useDisconnect } from "wagmi";
+import { useAccount, useDisconnect, useSwitchAccount } from "wagmi";
 import { activeChain } from "../config/chain.js";
 
 const NAV = [
@@ -73,6 +73,7 @@ function Header() {
             accountStatus={{ smallScreen: "avatar", largeScreen: "full" }}
             showBalance={false}
           />
+          <SwitchAccountButton />
           <DisconnectButton />
         </div>
       </div>
@@ -82,14 +83,55 @@ function Header() {
   );
 }
 
+// Lets the user move to a different connected account (e.g. the funded Anvil
+// account) without tearing the whole connection down. Opens the connector's own
+// account picker via switchAccount.
+function SwitchAccountButton() {
+  const { isConnected } = useAccount();
+  const { connectors, switchAccount, isPending } = useSwitchAccount();
+  if (!isConnected || connectors.length === 0) return null;
+
+  return (
+    <button
+      type="button"
+      disabled={isPending}
+      onClick={() => switchAccount({ connector: connectors[0] })}
+      className="rounded-lg border border-ink-200 px-3 py-2 text-[13px] font-medium text-ink-600 transition-colors duration-200 hover:border-ink-300 hover:text-ink-900 disabled:opacity-50"
+    >
+      Ganti akun
+    </button>
+  );
+}
+
 function DisconnectButton() {
   const { isConnected } = useAccount();
   const { disconnect } = useDisconnect();
   if (!isConnected) return null;
+
+  // wagmi's disconnect() leaves persisted state in localStorage, so a page that
+  // was already connected can reappear as connected on reload. Clear the wagmi/
+  // RainbowKit keys too, then reload so the app boots in a clean state.
+  function hardDisconnect() {
+    try {
+      disconnect();
+    } catch {
+      // Ignore: we are about to wipe storage and reload anyway.
+    }
+    try {
+      for (const key of Object.keys(localStorage)) {
+        if (/wagmi|rainbow|walletconnect|wc@/i.test(key)) localStorage.removeItem(key);
+      }
+      sessionStorage.clear();
+    } catch {
+      // Storage can throw in private mode; the reload below still helps.
+    }
+    window.location.reload();
+  }
+
   return (
     <button
       type="button"
-      onClick={() => disconnect()}
+      onClick={hardDisconnect}
       className="rounded-lg border border-ink-200 px-3 py-2 text-[13px] font-medium text-ink-600 transition-colors duration-200 hover:border-ink-300 hover:text-ink-900"
     >
       Disconnect
