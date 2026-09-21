@@ -1,6 +1,7 @@
 import { createServer } from "node:http";
+import { readFileSync } from "node:fs";
 import { runGrading, runDeliveryVerification } from "./flows.js";
-import { uploadImage } from "./ipfs/pinata.js";
+import { uploadImage, sniffImageMime } from "./ipfs/pinata.js";
 import { logEvent } from "./logs/logger.js";
 import { config } from "./config.js";
 
@@ -85,13 +86,39 @@ const routes = {
       models: config.ai.models.length,
       minConfidence: config.minConfidence,
       contract: config.chain.contractAddress || null,
-      ipfs: config.ipfs.pinataJwt ? "pinata" : "data-url-fallback",
+      ipfs: config.ipfs.pinataJwt ? "pinata" : "local-file",
     });
+  },
+
+  // Serves locally-stored harvest photos. The browser cannot load `file://` URLs
+  // from a page served over http, so the frontend points <img> at this endpoint
+  // for photoURIs that are not already a data/http/ipfs URL.
+  "GET /api/photo": async (req, res, _body, q) => {
+    const uri = q.get("uri");
+    if (!uri) {
+      send(res, 400, { error: "uri query parameter is required" });
+      return;
+    }
+    if (!uri.startsWith("file://")) {
+      send(res, 400, { error: "only file:// URIs are served here" });
+      return;
+    }
+    const path = uri.slice("file://".length).replace(/^\/([A-Za-z]:)/, "$1");
+    let bytes;
+    try {
+      bytes = readFileSync(path);
+    } catch {
+      send(res, 404, { error: "photo not found" });
+      return;
+    }
+    res.writeHead(200, { "Content-Type": sniffImageMime(bytes), ...CORS, "Cache-Control": "no-store" });
+    res.end(bytes);
   },
 };
 
 const server = createServer(async (req, res) => {
   const { method, url } = req;
+  const [path, search = ""] = url.split("?");
 
   if (method === "OPTIONS") {
     res.writeHead(204, CORS);
@@ -99,7 +126,7 @@ const server = createServer(async (req, res) => {
     return;
   }
 
-  const key = `${method} ${url.split("?")[0]}`;
+  const key = `${method} ${path}`;
   const handler = routes[key];
 
   if (!handler) {
@@ -109,7 +136,7 @@ const server = createServer(async (req, res) => {
 
   try {
     const body = method === "POST" ? await readBody(req) : {};
-    await handler(req, res, body);
+    await handler(req, res, body, new URLSearchParams(search));
   } catch (err) {
     logEvent({ level: "error", task: "http", message: key, error: err.message });
     send(res, 500, { error: err.message });

@@ -1,5 +1,5 @@
 import { formatEther, formatUnits } from "viem";
-import { EXPLORER_BASE } from "../config/chain.js";
+import { EXPLORER_BASE, AGENT_URL } from "../config/chain.js";
 
 export function shortAddress(address, size = 4) {
   if (!address || address.length < 10) return address || "";
@@ -67,6 +67,11 @@ export function gatewayUrl(uri) {
   if (!uri) return "";
   if (uri.startsWith("ipfs://")) {
     return `https://gateway.pinata.cloud/ipfs/${uri.slice("ipfs://".length)}`;
+  }
+  // Locally stored photos live on the agent's disk. A browser page served over
+  // http cannot load a file:// URL, so route it through the agent.
+  if (uri.startsWith("file://")) {
+    return `${AGENT_URL}/api/photo?uri=${encodeURIComponent(uri)}`;
   }
   return uri;
 }

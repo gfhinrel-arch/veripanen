@@ -1,27 +1,33 @@
-import { createHash } from "node:crypto";
-import { readFileSync } from "node:fs";
+import { createHash, randomUUID } from "node:crypto";
+import { readFileSync, writeFileSync, mkdirSync, existsSync } from "node:fs";
+import { resolve } from "node:path";
 import { config } from "../config.js";
 import { logEvent } from "../logs/logger.js";
 
 /**
  * Uploads an image to IPFS via Pinata and returns its CID + gateway URL.
- * Falls back to a data URL + local sha256 hash when Pinata is not configured,
- * which keeps the on-chain hash as the integrity reference (spec §6).
+ *
+ * Without Pinata we do NOT inline the bytes as a data URL: a large photo becomes
+ * a multi-megabyte string, and MetaMask rejects the resulting `eth_sendTransaction`
+ * with "Invalid parameters". Instead the bytes are written to a local file and the
+ * short `file://` URI is stored on-chain; the agent can re-read it by URI
+ * (`fetchAsDataUrl`) whenever it needs the pixels again.
  */
 export async function uploadImage({ bytes, filename, contentType }) {
   const hashHex = sha256Hex(bytes);
   const mime = contentType ?? sniffImageMime(bytes);
 
   if (!config.ipfs.pinataJwt) {
+    const photoURI = saveLocal(bytes, filename, mime);
     logEvent({
       level: "warn",
       task: "ipfs",
-      message: "Pinata not configured; using inline data URL fallback",
+      message: "Pinata not configured; stored locally",
       hash: hashHex,
       mime,
+      photoURI,
     });
-    const dataUrl = `data:${mime};base64,${Buffer.from(bytes).toString("base64")}`;
-    return { photoURI: dataUrl, hashHex, provider: "data-url" };
+    return { photoURI, hashHex, provider: "local-file" };
   }
 
   const form = new FormData();
@@ -42,6 +48,26 @@ export async function uploadImage({ bytes, filename, contentType }) {
 
   logEvent({ level: "info", task: "ipfs", message: "pinned to IPFS", cid, hash: hashHex });
   return { photoURI, hashHex, cid, provider: "pinata" };
+}
+
+const UPLOAD_DIR = resolve(config.rootDir, "tmp", "uploads");
+
+function extFor(mime) {
+  if (mime === "image/png") return "png";
+  if (mime === "image/webp") return "webp";
+  if (mime === "image/gif") return "gif";
+  return "jpg";
+}
+
+/** Writes bytes under agent/tmp/uploads and returns a short file:// URI. */
+export function saveLocal(bytes, filename, mime) {
+  if (!existsSync(UPLOAD_DIR)) mkdirSync(UPLOAD_DIR, { recursive: true });
+  const safeBase = (filename ?? "upload").replace(/[^a-zA-Z0-9._-]/g, "_").slice(0, 40);
+  const name = `${randomUUID()}-${safeBase || "upload"}.${extFor(mime)}`;
+  const full = resolve(UPLOAD_DIR, name);
+  writeFileSync(full, Buffer.from(bytes));
+  // Store a forward-slash file URL so it survives JSON and non-Windows readers.
+  return `file:///${full.replace(/\\/g, "/")}`;
 }
 
 export function sha256Hex(bytes) {
