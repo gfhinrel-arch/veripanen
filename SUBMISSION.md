@@ -1,0 +1,140 @@
+# VeriPanen — Submission
+
+## Project
+
+- **Team name:** TODO — information not yet provided
+- **Project name:** VeriPanen
+- **Track:** Indonesia Web3 Hackathon 2026 · Track 1 — AI Agents
+
+## Network
+
+- **Network:** BNB Smart Chain Testnet (deployment BLOCKED — see below)
+- **Chain ID:** 97
+- **Contract address:** TODO — not deployed yet (deployer has 0 tBNB)
+- **Explorer:** https://testnet.bscscan.com
+
+Alternative target if needed: opBNB Testnet, chain ID 5611,
+explorer https://opbnb-testnet.bscscan.com.
+
+> The contract currently runs and is fully verified on a local Anvil chain (chain ID 31337) at
+> `0x5FbDB2315678afecb367f032d93F642f64180aa3`. That is a local development chain, not a public
+> testnet. No public testnet deployment exists yet.
+
+## Problem Statement
+
+A grower knows their harvest is good. The buyer has no way to confirm that independently. Quality
+assessment is informal, inconsistent, or mediated by whoever holds the leverage. By the time goods
+arrive and a dispute starts, there is no shared reference to argue from.
+
+## Solution
+
+VeriPanen photographs the harvest, has an AI agent grade it against fixed visual criteria, and writes
+that grade — plus its confidence — to BNB Chain before any money moves. When the buyer receives the
+goods, a second AI pass compares what arrived against the originally graded photo. Escrow follows
+that comparison: match releases payment, mismatch locks it and opens a dispute.
+
+## Project Detail
+
+### Architecture
+
+```mermaid
+flowchart TD
+    F["Farmer"]
+    B["Buyer"]
+    FE["Frontend<br/>React · Vite · Wagmi · RainbowKit"]
+    AG["AI Agent<br/>Node.js"]
+    AI["Vision model<br/>9router gateway"]
+    OR["Oracle wallet<br/>(server-side only)"]
+    SC["HarvestEscrow.sol<br/>BNB Smart Chain Testnet"]
+    IPFS["IPFS (Pinata)<br/>photos + reasoning"]
+
+    F -->|"create listing, photo"| FE
+    B -->|"fund escrow, delivery photo"| FE
+    FE -->|"photo + metadata"| AG
+    FE -->|"createListing / fundEscrow / markShipped<br/>confirmReceipt / claimAfterTimeout"| SC
+    AG -->|"grade + verify"| AI
+    AI -->|"strict JSON"| AG
+    AG -->|"postGrade / postDeliveryVerification"| OR
+    OR --> SC
+    AG -->|"pin photo, reasoning"| IPFS
+    B -->|"reads all state directly"| SC
+```
+
+### AI role
+
+An off-chain Node.js agent performs two independent vision tasks:
+
+- **Stage 1 — harvest grading.** Returns `{ grade: "A"|"B"|"C", confidence: 0-100, reasons: [] }`
+  against fixed visual criteria.
+- **Stage 2 — delivery verification.** Compares the original graded photo against the buyer's
+  received-goods photo, returning `{ matched: bool, confidence: 0-100, differences: [] }`.
+
+Both tasks use a fixed system prompt with user data isolated in an explicit untrusted block
+(prompt-injection defense), and both enforce `MIN_CONFIDENCE` (default 70). Below the threshold the
+agent returns `MANUAL_REVIEW` and **writes nothing on-chain**.
+
+### Oracle role
+
+The smart contract never calls AI. A single trusted oracle address reports results on-chain via
+`postGrade` and `postDeliveryVerification`, both gated by `onlyOracle`. The oracle private key lives
+only in the agent's server-side environment — never in the frontend bundle.
+
+### Escrow flow
+
+`Created → Graded → Funded → Shipped → Completed | Disputed`
+
+- Farmer creates a listing (crop, weight, price, photo hash, photo URI).
+- Agent grades; oracle posts the grade on-chain.
+- Buyer funds escrow with the exact price.
+- Farmer marks shipped; a 7-day deadline starts.
+- Buyer uploads a delivery photo; agent verifies; oracle posts the result.
+  - match → payment released to farmer (`Completed`)
+  - mismatch → funds locked (`Disputed`)
+- Buyer can confirm receipt directly; farmer can claim after the deadline; owner resolves disputes.
+
+### Two-stage verification
+
+Separate functions, separate prompts, separate on-chain transactions. They are never collapsed into
+one call.
+
+### On-chain state
+
+Per listing: farmer, buyer, crop type, weight, price, photo hash, photo URI, grade, grade reasoning
+URI, grade confidence, delivery verified flag, delivery matched flag, delivery reasoning URI,
+delivery confidence, status, delivery deadline.
+
+### Frontend
+
+React 19 + Vite + Wagmi v2 + RainbowKit. Three roles: Farmer, Buyer, and a public ledger. Every
+browser write runs through one preflight that re-reads the live account and chain and maps nonce/RPC
+errors to actionable messages.
+
+### Limitations
+
+- AI grading depends on image quality and can misclassify; it is a standardized visual assessment,
+  not a laboratory test.
+- The oracle is a trust assumption: a compromised oracle key could post false results.
+- Dispute resolution is owner-controlled in this MVP.
+- The AI gateway is intermittently unavailable; the agent rotates across a model list with backoff.
+- Local Anvil is the only verified chain so far.
+
+### Security assumptions
+
+- Only the oracle address can post AI results; the owner can replace the oracle but cannot forge
+  results.
+- A posted grade is immutable (`postGrade` requires `Created`).
+- All value transfers are `ReentrancyGuard`-protected and update state before the external call.
+- `Completed` and `Disputed` block every further release path (no double payment).
+- Testnet only. No mainnet deployment.
+
+## Links
+
+- **GitHub:** https://github.com/gfhinrel-arch/veripanen
+- **Demo video:** TODO — information not yet provided
+- **Contract explorer:** TODO — no public testnet address yet
+- **Supporting links:** TODO — information not yet provided
+
+## Team
+
+- **TODO — information not yet provided.** The repository has a single commit author
+  (`gfhinrel-arch`). No team roster, roles, or contact details are recorded in the repository.
