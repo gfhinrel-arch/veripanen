@@ -37,6 +37,31 @@ function optional(name, fallback) {
   return value === undefined || value === "" ? fallback : value;
 }
 
+const MIN_CONFIDENCE_DEFAULT = 70;
+
+/**
+ * Parses MIN_CONFIDENCE. The blueprint requires a threshold of 70; only a
+ * deliberate override may lower it, and that always warns because it weakens the
+ * on-chain guard against low-confidence AI results.
+ */
+export function resolveMinConfidence(raw = process.env.MIN_CONFIDENCE) {
+  if (raw === undefined || raw === "") return MIN_CONFIDENCE_DEFAULT;
+  const value = Number(raw);
+  if (!Number.isFinite(value) || value < 0 || value > 100) {
+    process.stderr.write(
+      `WARNING: MIN_CONFIDENCE="${raw}" is invalid (expected a number in 0-100). Falling back to ${MIN_CONFIDENCE_DEFAULT}.\n`,
+    );
+    return MIN_CONFIDENCE_DEFAULT;
+  }
+  if (value < MIN_CONFIDENCE_DEFAULT) {
+    process.stderr.write(
+      `WARNING: MIN_CONFIDENCE is below ${MIN_CONFIDENCE_DEFAULT}.\n` +
+        "This value is intended for demo/testing only and does not match the VeriPanen blueprint requirement.\n",
+    );
+  }
+  return value;
+}
+
 export const config = {
   rootDir,
 
@@ -67,7 +92,7 @@ export const config = {
     timeoutMs: Number(optional("GLM_TIMEOUT_MS", "90000")),
   },
 
-  minConfidence: Number(optional("MIN_CONFIDENCE", "70")),
+  minConfidence: resolveMinConfidence(),
 
   chain: {
     rpcUrl: required("BNB_TESTNET_RPC_URL"),

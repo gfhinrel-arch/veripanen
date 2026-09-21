@@ -8,7 +8,7 @@
     "start": "node src/server.js",
     "grade": "node src/cli.js grade",
     "verify": "node src/cli.js verify",
-    "test": "node --test src/agent.test.js"
+    "test": "node --test src/*.test.js"
   },
   "dependencies": {
     "viem": "^2.56.8"
