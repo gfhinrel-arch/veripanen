@@ -8,17 +8,17 @@
 
 ## Network
 
-- **Network:** BNB Smart Chain Testnet (deployment BLOCKED — see below)
-- **Chain ID:** 97
-- **Contract address:** TODO — not deployed yet (deployer has 0 tBNB)
-- **Explorer:** https://testnet.bscscan.com
+- **Network:** opBNB Testnet
+- **Chain ID:** 5611
+- **Contract address:** `0xE07e56Af882368bc604F047Ed092A0C139c72809`
+- **Explorer:** https://opbnb-testnet.bscscan.com/address/0xE07e56Af882368bc604F047Ed092A0C139c72809
 
-Alternative target if needed: opBNB Testnet, chain ID 5611,
-explorer https://opbnb-testnet.bscscan.com.
+Alternative target if needed: BNB Smart Chain Testnet, chain ID 97,
+explorer https://testnet.bscscan.com.
 
-> The contract currently runs and is fully verified on a local Anvil chain (chain ID 31337) at
-> `0x5FbDB2315678afecb367f032d93F642f64180aa3`. That is a local development chain, not a public
-> testnet. No public testnet deployment exists yet.
+> The contract is also verified on a local Anvil chain (chain ID 31337) at
+> `0x5FbDB2315678afecb367f032d93F642f64180aa3` for development. That is a local chain, not a
+> public testnet. The public deployment is the opBNB Testnet address above.
 
 ## Problem Statement
 
@@ -45,7 +45,7 @@ flowchart TD
     AG["AI Agent<br/>Node.js"]
     AI["Vision model<br/>9router gateway"]
     OR["Oracle wallet<br/>(server-side only)"]
-    SC["HarvestEscrow.sol<br/>BNB Smart Chain Testnet"]
+    SC["HarvestEscrow.sol<br/>opBNB Testnet"]
     IPFS["IPFS (Pinata)<br/>photos + reasoning"]
 
     F -->|"create listing, photo"| FE
@@ -116,7 +116,8 @@ errors to actionable messages.
 - The oracle is a trust assumption: a compromised oracle key could post false results.
 - Dispute resolution is owner-controlled in this MVP.
 - The AI gateway is intermittently unavailable; the agent rotates across a model list with backoff.
-- Local Anvil is the only verified chain so far.
+- Verified on Anvil (31337) and deployed on opBNB Testnet (5611). BNB Testnet (97) is a supported
+  redeployment target but is not currently deployed.
 
 ### Security assumptions
 
@@ -131,7 +132,7 @@ errors to actionable messages.
 
 - **GitHub:** https://github.com/gfhinrel-arch/veripanen
 - **Demo video:** TODO — information not yet provided
-- **Contract explorer:** TODO — no public testnet address yet
+- **Contract explorer:** https://opbnb-testnet.bscscan.com/address/0xE07e56Af882368bc604F047Ed092A0C139c72809
 - **Supporting links:** TODO — information not yet provided
 
 ## Team

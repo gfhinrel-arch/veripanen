@@ -211,7 +211,7 @@ MetaMask setup for local demo:
 | Frontend | Done, 16/16 tests, build clean |
 | End-to-end (Anvil) | Done, verified live in the browser |
 | **End-to-end (opBNB 5611)** | **Deployed; fund/ship/verify flow runs** |
-| Confidence threshold | 70 in code; lowered to 20 for the live demo via env (`MIN_CONFIDENCE`) |
+| Confidence threshold | **Current active: `MIN_CONFIDENCE=70`** (code default + `.env.example`). A local `agent/.env` may hold `20` for demo testing; that is a temporary local override, not the project default. |
 | Wallet preflight | All 7 write paths guarded |
 | opBNB testnet deploy | **DONE** — `0xE07e56Af882368bc604F047Ed092A0C139c72809` |
 | **Overall** | **Demo-ready** — contract deployed, both AI stages live, full browser flow verified |

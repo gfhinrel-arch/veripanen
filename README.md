@@ -214,9 +214,9 @@ project, copy its project id. It is only needed for the WalletConnect QR option 
 
 ### Pinata
 
-`PINATA_JWT` is required for IPFS upload through Pinata. Without it the agent falls back to inline
-data URLs (fine for local demos, not for production). Create a JWT in the Pinata dashboard. Never
-commit it.
+`PINATA_JWT` is required for IPFS upload through Pinata. Without it the agent stores photos as local
+files under `agent/tmp/uploads/` and serves them via `/api/photo` (fine for local demos, not for
+production). Create a JWT in the Pinata dashboard. Never commit it.
 
 ### Oracle key boundary
 
@@ -230,23 +230,52 @@ environment has it.
 
 ### Rotate before submission
 
-If these credentials were exposed during development, rotate them before submission:
+If these credentials were exposed during development, rotate them before submission. Record the
+actual rotation date only once a real rotation has happened — never invent one.
 
-- deployer private key (`contract/.env` `PRIVATE_KEY`)
-- oracle private key (`agent/.env` `ORACLE_PRIVATE_KEY` and `contract/.env` `ORACLE_ADDRESS`)
-- `PINATA_JWT`
-- `GLM_API_KEY`
+| Credential | Where it lives | Rotation required | Status | Date |
+| --- | --- | --- | --- | --- |
+| Deployer private key | `contract/.env` `PRIVATE_KEY` | If exposed during development | Not rotated | Rotation date: TODO — record actual rotation date after verified rotation |
+| Oracle private key | `agent/.env` `ORACLE_PRIVATE_KEY` | If exposed during development | Not rotated | Rotation date: TODO — record actual rotation date after verified rotation |
+| `PINATA_JWT` | `agent/.env` `PINATA_JWT` | If exposed during development | Not rotated | Rotation date: TODO — record actual rotation date after verified rotation |
+| AI provider API key | `agent/.env` `GLM_API_KEY` | If exposed during development | Not rotated | Rotation date: TODO — record actual rotation date after verified rotation |
 
 The Anvil default keys in `agent/scripts/demo.js` are public, worthless, local-only test keys.
+
+## Deployed Addresses
+
+**Testnet only.** Never mainnet.
+
+| Field | Value |
+| --- | --- |
+| Network | opBNB Testnet |
+| Chain ID | 5611 |
+| Contract | `0xE07e56Af882368bc604F047Ed092A0C139c72809` |
+| Explorer | https://opbnb-testnet.bscscan.com/address/0xE07e56Af882368bc604F047Ed092A0C139c72809 |
+| Oracle (also owner) | `0x70997970C51812dc3A010C7d01b50e0d17dc79C8` |
+
+Deployment uses the existing Foundry script; nothing else changed:
+
+```bash
+cd contract
+PRIVATE_KEY=<funded-deployer-key> \
+ORACLE_ADDRESS=<oracle-address> \
+forge script script/Deploy.s.sol --rpc-url opbnb_testnet --broadcast
+```
+
+`opbnb_testnet` is the RPC alias in `contract/foundry.toml`, which reads `OPBNB_TESTNET_RPC_URL`
+from the environment. BNB Smart Chain Testnet (chain 97) remains supported as a redeployment target
+via the `bnb_testnet` alias. See `contract/README.md` for the full deploy guide, including optional
+explorer verification.
 
 ## Contract address
 
 ```
-Network:      BNB Smart Chain Testnet
-Chain ID:     97
-Contract:     <filled in after deployment>
-Oracle:       <filled in after deployment>
-Deployment TX:<filled in after deployment>
+Network:      opBNB Testnet
+Chain ID:     5611
+Contract:     0xE07e56Af882368bc604F047Ed092A0C139c72809
+Oracle:       0x70997970C51812dc3A010C7d01b50e0d17dc79C8
+Local (Anvil):0x5FbDB2315678afecb367f032d93F642f64180aa3   (chain 31337, development)
 ```
 
 ## The complete user flow
@@ -367,7 +396,8 @@ The app shows the same guidance inline when it detects `nonce too low`, `nonce t
 ### "Invalid parameters were provided to the RPC method"
 
 This generic MetaMask message almost always means the wallet is on the wrong chain. Confirm both the
-app and the wallet point at the same network (local Anvil `31337`, or BNB Testnet `97`), then retry.
+app and the wallet point at the same network (local Anvil `31337`, opBNB Testnet `5611`, or BNB
+Testnet `97`), then retry.
 
 ## License
 
