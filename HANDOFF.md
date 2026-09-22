@@ -88,7 +88,7 @@ Evidence: `agent/evidence/anvil-demo.json`. Script: `agent/scripts/demo.js`.
 
 - **Task 7:** opBNB Testnet (5611) deployment was independently confirmed on-chain before documenting it: `cast code` returned 14504 chars of bytecode (sha256 `0x9fa3b7902f6208e15a86d2a28acf6b999dc26dea999f260ab7568f74326a79dc`), and `oracle()`/`owner()` both read `0x70997970C51812dc3A010C7d01b50e0d17dc79C8`. `SUBMISSION.md` now lists opBNB 5611 + the explorer URL; the stale pre-deployment lines were removed.
 - **Task 8:** `README.md` gained `## Deployed Addresses` (TESTNET ONLY) and a deployment command using the existing `opbnb_testnet` Foundry alias; the 9router section was left untouched.
-- **Task 9:** the confidence-status line now states the current active value `MIN_CONFIDENCE=70` clearly, with the local `20` override marked as a temporary local value only.
+- **Task 9:** the confidence-status line now states the current active value `MIN_CONFIDENCE=70` clearly.
 - **Task 10:** not modified — `agent/scripts/demo.js:286–288` already rejects any chain other than 31337 before running scenarios.
 - **Task 11:** the frontend bundle was verified clean (source grep plus a 190-file scan of a fresh `frontend/dist/` for oracle/private/AI-key patterns → no hits). No key rotation has actually been performed or evidenced, so every rotation date remains `Rotation date: TODO — record actual rotation date after verified rotation`.
 
@@ -227,7 +227,7 @@ MetaMask setup for local demo:
 | Frontend | Done, 16/16 tests, build clean |
 | End-to-end (Anvil) | Done, verified live in the browser |
 | **End-to-end (opBNB 5611)** | **Deployed; fund/ship/verify flow runs** |
-| Confidence threshold | **Current active: `MIN_CONFIDENCE=70`** (code default + `.env.example`). A local `agent/.env` may hold `20` for demo testing; that is a temporary local override, not the project default. |
+| Confidence threshold | **Current active: `MIN_CONFIDENCE=70`** (code default, `.env.example`, and local env files all agree). |
 | Wallet preflight | All 7 write paths guarded |
 | opBNB testnet deploy | **DONE** — `0xE07e56Af882368bc604F047Ed092A0C139c72809` |
 | **Overall** | **Demo-ready** — contract deployed, both AI stages live, full browser flow verified |
