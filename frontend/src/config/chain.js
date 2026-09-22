@@ -5,12 +5,19 @@ const RPC_URL =
 
 // Anvil is the local development chain. When the RPC points at localhost we must
 // target chain 31337, not 97, or every write fails with a chain-id mismatch.
-const IS_LOCAL = /^https?:\/\/(127\.0\.0\.1|localhost)/.test(RPC_URL);
+// A tunnel exposes the same local Anvil over a public URL, so VITE_CHAIN_ID lets
+// the operator state the chain explicitly instead of relying on the hostname.
+const EXPLICIT_CHAIN_ID = Number(import.meta.env.VITE_CHAIN_ID || 0);
+const IS_LOCAL =
+  EXPLICIT_CHAIN_ID === 31337 ||
+  /^https?:\/\/(127\.0\.0\.1|localhost)/.test(RPC_URL);
+
+const CHAIN_ID = EXPLICIT_CHAIN_ID || (IS_LOCAL ? 31337 : 97);
 
 const EXPLORER_LOCAL = { name: "Local", url: "http://127.0.0.1:8545" };
 
 export const activeChain = defineChain({
-  id: IS_LOCAL ? 31337 : 97,
+  id: CHAIN_ID,
   name: IS_LOCAL ? "Anvil Local" : "BNB Smart Chain Testnet",
   nativeCurrency: { name: "tBNB", symbol: "tBNB", decimals: 18 },
   rpcUrls: { default: { http: [RPC_URL] } },
