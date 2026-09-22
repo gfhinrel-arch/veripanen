@@ -3,20 +3,32 @@ import { privateKeyToAccount } from "viem/accounts";
 import { config, assertChainConfigured } from "../config.js";
 import { logEvent } from "../logs/logger.js";
 
-// Local development uses Anvil (31337). Anything else targets BNB Testnet (97).
-// A chain-id mismatch makes every write fail, so this must follow the RPC.
+// Chain id comes from config (CHAIN_ID env), with a localhost RPC implying Anvil.
+// opBNB Testnet (5611) and BNB Testnet (97) are both public targets; a chain-id
+// mismatch makes every write fail, so this must match the configured RPC.
 const isLocal = /^https?:\/\/(127\.0\.0\.1|localhost)/.test(config.chain.rpcUrl);
+const chainId = isLocal ? 31337 : config.chain.chainId;
+
+const CHAIN_NAME =
+  chainId === 31337
+    ? "Anvil Local"
+    : chainId === 5611
+      ? "opBNB Testnet"
+      : "BNB Smart Chain Testnet";
+
+const EXPLORER =
+  chainId === 31337
+    ? { name: "Local", url: "http://127.0.0.1:8545" }
+    : chainId === 5611
+      ? { name: "opBNB Testnet", url: "https://opbnb-testnet.bscscan.com" }
+      : { name: "BscScan Testnet", url: "https://testnet.bscscan.com" };
 
 export const bnbTestnet = defineChain({
-  id: isLocal ? 31337 : 97,
-  name: isLocal ? "Anvil Local" : "BNB Smart Chain Testnet",
+  id: chainId,
+  name: CHAIN_NAME,
   nativeCurrency: { name: "tBNB", symbol: "tBNB", decimals: 18 },
   rpcUrls: { default: { http: [config.chain.rpcUrl] } },
-  blockExplorers: {
-    default: isLocal
-      ? { name: "Local", url: "http://127.0.0.1:8545" }
-      : { name: "BscScan Testnet", url: "https://testnet.bscscan.com" },
-  },
+  blockExplorers: { default: EXPLORER },
   testnet: true,
 });
 

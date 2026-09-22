@@ -15,25 +15,29 @@ const IS_LOCAL =
 const CHAIN_ID = EXPLICIT_CHAIN_ID || (IS_LOCAL ? 31337 : 97);
 
 const EXPLORER_LOCAL = { name: "Local", url: "http://127.0.0.1:8545" };
+const EXPLORER_OPBNB = { name: "opBNB Testnet", url: "https://opbnb-testnet.bscscan.com" };
+const EXPLORER_BSC = { name: "BscScan Testnet", url: "https://testnet.bscscan.com" };
+
+const CHAIN_NAME = IS_LOCAL
+  ? "Anvil Local"
+  : CHAIN_ID === 5611
+    ? "opBNB Testnet"
+    : "BNB Smart Chain Testnet";
+
+const EXPLORER = IS_LOCAL ? EXPLORER_LOCAL : CHAIN_ID === 5611 ? EXPLORER_OPBNB : EXPLORER_BSC;
 
 export const activeChain = defineChain({
   id: CHAIN_ID,
-  name: IS_LOCAL ? "Anvil Local" : "BNB Smart Chain Testnet",
+  name: CHAIN_NAME,
   nativeCurrency: { name: "tBNB", symbol: "tBNB", decimals: 18 },
   rpcUrls: { default: { http: [RPC_URL] } },
-  blockExplorers: {
-    default: IS_LOCAL
-      ? EXPLORER_LOCAL
-      : { name: "BscScan Testnet", url: "https://testnet.bscscan.com" },
-  },
+  blockExplorers: { default: EXPLORER },
   testnet: true,
 });
 
 export const isLocalChain = IS_LOCAL;
 
-export const EXPLORER_BASE = IS_LOCAL
-  ? ""
-  : "https://testnet.bscscan.com";
+export const EXPLORER_BASE = IS_LOCAL ? "" : EXPLORER.url;
 
 /** Kept as an alias so existing imports keep working. */
 export const bnbTestnet = activeChain;
