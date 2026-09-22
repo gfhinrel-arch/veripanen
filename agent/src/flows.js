@@ -1,7 +1,7 @@
 import { gradeHarvest } from "./grading/gradeHarvest.js";
 import { verifyDelivery } from "./delivery/verifyDelivery.js";
 import { postGradeOnChain, postDeliveryOnChain, readListing } from "./blockchain/escrow.js";
-import { uploadImage, fetchAsDataUrl } from "./ipfs/pinata.js";
+import { uploadImage, fetchAsDataUrl, sniffImageMime } from "./ipfs/pinata.js";
 import { logEvent, logManualReview } from "./logs/logger.js";
 import { config } from "./config.js";
 
@@ -168,8 +168,9 @@ export async function runDeliveryVerification(input) {
 
 async function toDataUrl(bytes, filename, contentType) {
   if (!bytes) throw new Error("No image bytes or data URL provided");
-  // Sniff the real MIME; the AI gateway rejects a mismatch between the declared
-  // data-URL MIME and the actual image bytes.
-  const up = await uploadImage({ bytes, filename: filename ?? "photo.jpg", contentType });
-  return up.photoURI;
+  // The vision model needs an inline data URL, NOT a stored URI: a `file://`
+  // location is meaningless to the gateway. Build the data URL directly from the
+  // bytes and let the caller upload/store separately when it needs a URI.
+  const mime = contentType ?? sniffImageMime(bytes);
+  return `data:${mime};base64,${Buffer.from(bytes).toString("base64")}`;
 }
