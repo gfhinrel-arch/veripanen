@@ -156,7 +156,7 @@ Dari struct `Listing` di kontrak:
 | Reentrancy (pembayaran berulang) | `ReentrancyGuard` OpenZeppelin di semua fungsi bayar |
 | Pembeli tahan uang selamanya | Tenggat 7 hari + `claimAfterTimeout` |
 | Pembayaran salah jumlah | `fundEscrow` wajib `msg.value == priceWei` |
-| Beda jaringan | Auto-deteksi: RPC localhost → Anvil 31337, selain itu → BNB Testnet 97, **plus preflight frontend yang memblokir transaksi saat network wallet salah** |
+| Beda jaringan | Resolusi chain (`frontend/src/config/chain.js`): (1) `VITE_CHAIN_ID` diset → itu yang menang; (2) RPC localhost/127.0.0.1 → Anvil 31337; (3) selain itu → default 97. **Untuk deploy opBNB Testnet, `VITE_CHAIN_ID=5611` WAJIB diset**, kalau tidak frontend jatuh ke 97 dan setiap transaksi gagal. Plus preflight frontend yang memblokir transaksi saat network wallet salah |
 
 ---
 

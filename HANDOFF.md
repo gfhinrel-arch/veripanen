@@ -72,9 +72,25 @@ Evidence: `agent/evidence/anvil-demo.json`. Script: `agent/scripts/demo.js`.
 | 1. MIN_CONFIDENCE = 70 + validation + regression tests | PASS | `0b79c02` |
 | 2. Align AI provider/model docs | PASS | `9886852` |
 | 3. Browser wallet preflight + nonce errors | PASS | `cadd6fa` |
-| 4. Testnet deployment readiness | **BLOCKED** (config PASS, deploy blocked) | `e704838` |
+| 4. Testnet deployment readiness | PASS (config) — deploy DONE later, see §6.1 | `e704838` |
 | 5. Environment & secret hygiene | PASS | `e463564` |
 | 6. SUBMISSION.md | PASS | `e11fbbe` |
+
+### Wave 2 — Documentation, safety & submission readiness (commit `2ae7a4a`)
+
+| Task | Status | Evidence |
+|---|---|---|
+| 7. `SUBMISSION.md` deployment status corrected | PASS | commit `2ae7a4a` |
+| 8. `README.md` `## Deployed Addresses` added | PASS | commit `2ae7a4a` |
+| 9. `HANDOFF.md` confidence line corrected | PASS | commit `2ae7a4a` |
+| 10. `demo.js` local-chain guard | SKIPPED — guard already present and correct at `agent/scripts/demo.js:286–288`, file unmodified | — |
+| 11. Key rotation + frontend bundle hygiene | PASS (verification) — rotation dates still TODO | commit `2ae7a4a` |
+
+- **Task 7:** opBNB Testnet (5611) deployment was independently confirmed on-chain before documenting it: `cast code` returned 14504 chars of bytecode (sha256 `0x9fa3b7902f6208e15a86d2a28acf6b999dc26dea999f260ab7568f74326a79dc`), and `oracle()`/`owner()` both read `0x70997970C51812dc3A010C7d01b50e0d17dc79C8`. `SUBMISSION.md` now lists opBNB 5611 + the explorer URL; the stale pre-deployment lines were removed.
+- **Task 8:** `README.md` gained `## Deployed Addresses` (TESTNET ONLY) and a deployment command using the existing `opbnb_testnet` Foundry alias; the 9router section was left untouched.
+- **Task 9:** the confidence-status line now states the current active value `MIN_CONFIDENCE=70` clearly, with the local `20` override marked as a temporary local value only.
+- **Task 10:** not modified — `agent/scripts/demo.js:286–288` already rejects any chain other than 31337 before running scenarios.
+- **Task 11:** the frontend bundle was verified clean (source grep plus a 190-file scan of a fresh `frontend/dist/` for oracle/private/AI-key patterns → no hits). No key rotation has actually been performed or evidenced, so every rotation date remains `Rotation date: TODO — record actual rotation date after verified rotation`.
 
 ### Task 1 — MIN_CONFIDENCE
 - `agent/src/config.js`: `resolveMinConfidence()` — default 70, validates finite/0–100, safe fallback to 70, warns to stderr when below 70 or invalid.
