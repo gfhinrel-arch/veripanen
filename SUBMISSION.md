@@ -2,7 +2,7 @@
 
 ## Project
 
-- **Team name:** TODO — information not yet provided
+- **Team name:** Fhin Group
 - **Project name:** VeriPanen
 - **Track:** Indonesia Web3 Hackathon 2026 · Track 1 — AI Agents
 
@@ -137,5 +137,5 @@ errors to actionable messages.
 
 ## Team
 
-- **TODO — information not yet provided.** The repository has a single commit author
-  (`gfhinrel-arch`). No team roster, roles, or contact details are recorded in the repository.
+- **Ghiyas Fhinrel Musyaffa** — solo builder (design, smart contract, AI agent, frontend).
+  GitHub: `gfhinrel-arch`.
