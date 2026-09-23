@@ -34,8 +34,8 @@ Required environment variables:
 | `BNB_TESTNET_RPC_URL` | BNB Smart Chain Testnet RPC (used by the `bnb_testnet` alias) |
 | `BSCSCAN_API_KEY` | Explorer API key, for `--verify` only |
 
-**Testnet only.** Chain ID 97 (BNB Smart Chain Testnet) or 5611 (opBNB Testnet). Verify the chain ID
-before broadcasting; never deploy to mainnet.
+**Testnet only.** Chain ID 5611 (opBNB Testnet, the deployed chain) or 97 (BNB Smart Chain Testnet).
+Verify the chain ID before broadcasting; never deploy to mainnet.
 
 ```bash
 # opBNB Testnet (chain 5611) — the chain the project is deployed on

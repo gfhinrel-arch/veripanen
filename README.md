@@ -47,7 +47,7 @@ flowchart TD
     AI["Vision model<br/>9router gateway"]
     OR["Oracle wallet<br/>(server-side only)"]
     SC["HarvestEscrow.sol<br/>opBNB Testnet"]
-    IPFS["IPFS (Pinata)<br/>photos + reasoning"]
+    IPFS["Local file store<br/>(Pinata optional)"]
 
     F -->|"create listing, photo"| FE
     B -->|"fund escrow, delivery photo"| FE
@@ -103,7 +103,7 @@ veripanen/
 │   │   ├── delivery/    Stage 2
 │   │   ├── ai/          gateway client, JSON validation, retries
 │   │   ├── blockchain/  oracle wallet, contract writes
-│   │   ├── ipfs/        Pinata upload, MIME sniffing
+│   │   ├── ipfs/        Pinata or local-file store, MIME sniffing
 │   │   ├── validation/  input sanitization
 │   │   ├── logs/        JSONL audit log
 │   │   ├── flows.js     end-to-end orchestration
@@ -134,7 +134,7 @@ veripanen/
 ```bash
 cd contract
 forge install            # forge-std + openzeppelin (already vendored in lib/)
-cp .env.example .env     # fill PRIVATE_KEY, ORACLE_ADDRESS, BNB_TESTNET_RPC_URL
+cp .env.example .env     # fill PRIVATE_KEY, ORACLE_ADDRESS, OPBNB_TESTNET_RPC_URL, BSCSCAN_API_KEY
 forge build
 forge test
 ```
@@ -207,12 +207,16 @@ npm run dev             # http://localhost:5173
 Never commit `.env`. Every `.env` is covered by `.gitignore`; only `.env.example` is tracked. Copy
 each example and fill it in locally:
 
-- `contract/.env` — `PRIVATE_KEY`, `ORACLE_ADDRESS`, `BNB_TESTNET_RPC_URL`, and optionally
-  `OPBNB_TESTNET_RPC_URL`.
-- `agent/.env` — `GLM_API_KEY`, `ORACLE_PRIVATE_KEY`, `CONTRACT_ADDRESS`, `BNB_TESTNET_RPC_URL`,
-  `MIN_CONFIDENCE`, and `PINATA_JWT`.
-- `frontend/.env` — `VITE_CONTRACT_ADDRESS`, `VITE_BNB_TESTNET_RPC_URL`, `VITE_AGENT_URL`, and
-  `VITE_WALLETCONNECT_PROJECT_ID`.
+- `contract/.env` — `PRIVATE_KEY`, `ORACLE_ADDRESS`, `OPBNB_TESTNET_RPC_URL`,
+  `BSCSCAN_API_KEY` (for `--verify`), and optionally `BNB_TESTNET_RPC_URL`.
+- `agent/.env` — `GLM_API_KEY`, `ORACLE_PRIVATE_KEY`, `CONTRACT_ADDRESS`, `CHAIN_ID`,
+  `BNB_TESTNET_RPC_URL`, `MIN_CONFIDENCE`, and `PINATA_JWT`.
+- `frontend/.env` — `VITE_CONTRACT_ADDRESS`, `VITE_CHAIN_ID`, `VITE_BNB_TESTNET_RPC_URL`,
+  `VITE_AGENT_URL`, and `VITE_WALLETCONNECT_PROJECT_ID`.
+
+`CHAIN_ID` and `VITE_CHAIN_ID` must match the chain the contract is deployed on (5611 here).
+`BNB_TESTNET_RPC_URL` / `VITE_BNB_TESTNET_RPC_URL` keep their historical names — point them at
+the same chain.
 
 ### WalletConnect
 
@@ -290,7 +294,8 @@ Local (Anvil):0x5FbDB2315678afecb367f032d93F642f64180aa3   (chain 31337, develop
 
 1. Farmer connects a wallet and opens **Farmer**.
 2. Farmer attaches a harvest photo, enters crop / weight / price, publishes.
-   - The photo is hashed client-side and pinned to IPFS.
+   - The photo is hashed client-side and stored off-chain — local file store by default, Pinata
+     when `PINATA_JWT` is set. Only the hash and URI go on-chain.
    - `createListing` writes crop, weight, price, hash, URI on-chain.
 3. The agent grades the photo and, if confidence ≥ `MIN_CONFIDENCE`, the oracle calls `postGrade`.
    - Below threshold the agent writes a `MANUAL_REVIEW` log and posts nothing.
