@@ -1,0 +1,60 @@
+{
+  "chain": "opBNB Testnet",
+  "chainId": 5611,
+  "contract": "0xE07e56Af882368bc604F047Ed092A0C139c72809",
+  "explorer": "https://opbnb-testnet.bscscan.com",
+  "oracle": "0x70997970C51812dc3A010C7d01b50e0d17dc79C8",
+  "listingId": 1,
+  "finalStatus": "Completed",
+  "finishedAt": "2026-09-23T17:17:46.000Z",
+  "steps": [
+    {
+      "step": "createListing",
+      "tx": "0x66a7c9076f417d6be96b748c97584fa30d718973ece35db72c7e812805e20b38",
+      "block": 205498133,
+      "caller": "0x70997970C51812dc3A010C7d01b50e0d17dc79C8",
+      "timestamp": "2026-09-23T17:17:39.000Z"
+    },
+    {
+      "step": "postGrade",
+      "tx": "0xc04681e77008d8ce68e60c06ca9fdb345b1a102cb46da15def7dfbed20769514",
+      "block": 205498140,
+      "grade": "A",
+      "confidence": 92,
+      "timestamp": "2026-09-23T17:17:41.000Z"
+    },
+    {
+      "step": "fundEscrow",
+      "tx": "0x63e7c796524b190600db7225ec57e112628032e6950c073276322d3bbe44af40",
+      "block": 205498145,
+      "amountWei": "1000000000000000",
+      "timestamp": "2026-09-23T17:17:42.000Z"
+    },
+    {
+      "step": "markShipped",
+      "tx": "0xf6d74dc86b933933551036dbd53e2630a0d2f60c3bf64127a294c98cfa7ada49",
+      "block": 205498152,
+      "timestamp": "2026-09-23T17:17:44.000Z"
+    },
+    {
+      "step": "postDeliveryVerification",
+      "tx": "0x91ddb61014f5c786ce292919b6dbca07991e05ceed941253263c7472dc9ea3d7",
+      "block": 205498161,
+      "matched": true,
+      "confidence": 91,
+      "timestamp": "2026-09-23T17:17:46.000Z"
+    }
+  ],
+  "finalListingState": {
+    "cropType": "Lowland Rice",
+    "weightKg": 480,
+    "priceWei": "1000000000000000",
+    "grade": "A",
+    "gradeConfidence": 92,
+    "deliveryVerified": true,
+    "deliveryMatched": true,
+    "deliveryConfidence": 91,
+    "status": "Completed"
+  },
+  "note": "Reconstructed by reading the public chain (eth_getLogs + getListing) at the contract address, not written by a script run. Every field above is verifiable against the five transaction hashes on https://opbnb-testnet.bscscan.com. Running `npm run testnet-demo` appends a fresh run in the same shape."
+}

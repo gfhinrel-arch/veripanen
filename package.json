@@ -2,7 +2,7 @@
   "name": "veripanen",
   "private": true,
   "version": "0.1.0",
-  "description": "VeriPanen — AI harvest grading + on-chain escrow (BNB Smart Chain Testnet)",
+  "description": "VeriPanen — AI harvest grading + on-chain escrow (opBNB Testnet)",
   "scripts": {
     "install:all": "npm --prefix agent install && npm --prefix frontend install",
     "dev": "npm --prefix frontend run dev",
@@ -11,6 +11,7 @@
     "build": "npm --prefix frontend run build",
     "test:contract": "cd contract && forge test",
     "test:agent": "npm --prefix agent test",
-    "anvil": "anvil"
+    "anvil": "anvil",
+    "testnet-demo": "npm --prefix agent run testnet-demo"
   }
 }

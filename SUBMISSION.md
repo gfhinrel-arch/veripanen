@@ -46,7 +46,7 @@ flowchart TD
     AI["Vision model<br/>9router gateway"]
     OR["Oracle wallet<br/>(server-side only)"]
     SC["HarvestEscrow.sol<br/>opBNB Testnet"]
-    IPFS["IPFS (Pinata)<br/>photos + reasoning"]
+    IPFS["Local file store<br/>(Pinata optional)"]
 
     F -->|"create listing, photo"| FE
     B -->|"fund escrow, delivery photo"| FE
@@ -97,6 +97,24 @@ only in the agent's server-side environment — never in the frontend bundle.
 Separate functions, separate prompts, separate on-chain transactions. They are never collapsed into
 one call.
 
+### Verified on-chain
+
+The full escrow lifecycle has been executed against the deployed contract on opBNB Testnet. Five
+transactions, listing 1, final status `Completed`, payment released to the farmer:
+
+| Step | Function | Transaction |
+| --- | --- | --- |
+| 1 | `createListing` | `0x66a7c9076f417d6be96b748c97584fa30d718973ece35db72c7e812805e20b38` |
+| 2 | `postGrade` | `0xc04681e77008d8ce68e60c06ca9fdb345b1a102cb46da15def7dfbed20769514` |
+| 3 | `fundEscrow` | `0x63e7c796524b190600db7225ec57e112628032e6950c073276322d3bbe44af40` |
+| 4 | `markShipped` | `0xf6d74dc86b933933551036dbd53e2630a0d2f60c3bf64127a294c98cfa7ada49` |
+| 5 | `postDeliveryVerification` | `0x91ddb61014f5c786ce292919b6dbca07991e05ceed941253263c7472dc9ea3d7` |
+
+Reproduce with `npm run testnet-demo` from the repo root (`agent/scripts/testnet-demo.js`). The
+script refuses to run on Anvil or on any mainnet chain id, and checks up front that the configured
+oracle key matches the contract's oracle. Machine-readable output is committed at
+`agent/evidence/opbnb-demo-5611.json`.
+
 ### On-chain state
 
 Per listing: farmer, buyer, crop type, weight, price, photo hash, photo URI, grade, grade reasoning
@@ -116,8 +134,10 @@ errors to actionable messages.
 - The oracle is a trust assumption: a compromised oracle key could post false results.
 - Dispute resolution is owner-controlled in this MVP.
 - The AI gateway is intermittently unavailable; the agent rotates across a model list with backoff.
-- Verified on Anvil (31337) and deployed on opBNB Testnet (5611). BNB Testnet (97) is a supported
-  redeployment target but is not currently deployed.
+- The escrow lifecycle is verified end to end on opBNB Testnet (5611) and on a local Anvil chain
+  (31337). BNB Testnet (97) is a supported redeployment target but is not currently deployed.
+- Source verification on BscScan is pending; the explorer shows the deployed bytecode, and the
+  source is readable in the repository.
 
 ### Security assumptions
 
@@ -134,6 +154,7 @@ errors to actionable messages.
 - **Demo video:** TODO — information not yet provided
 - **Contract explorer:** https://opbnb-testnet.bscscan.com/address/0xE07e56Af882368bc604F047Ed092A0C139c72809
 - **Supporting links:** TODO — information not yet provided
+- **On-chain evidence:** `agent/evidence/opbnb-demo-5611.json` in the repository
 
 ## Team
 

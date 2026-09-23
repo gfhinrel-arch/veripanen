@@ -30,30 +30,33 @@ Required environment variables:
 | --- | --- |
 | `PRIVATE_KEY` | Deployer wallet (becomes the contract owner) |
 | `ORACLE_ADDRESS` | Trusted AI agent oracle wallet |
-| `BNB_TESTNET_RPC_URL` | BNB Smart Chain Testnet RPC |
+| `OPBNB_TESTNET_RPC_URL` | opBNB Testnet RPC (used by the `opbnb_testnet` alias) |
+| `BNB_TESTNET_RPC_URL` | BNB Smart Chain Testnet RPC (used by the `bnb_testnet` alias) |
+| `BSCSCAN_API_KEY` | Explorer API key, for `--verify` only |
 
 **Testnet only.** Chain ID 97 (BNB Smart Chain Testnet) or 5611 (opBNB Testnet). Verify the chain ID
 before broadcasting; never deploy to mainnet.
 
 ```bash
-# BNB Smart Chain Testnet (chain 97) — with explorer verification
-forge script script/Deploy.s.sol \
-  --rpc-url bnb_testnet \
-  --broadcast \
-  --verify \
-  --etherscan-api-key "$BSCSCAN_API_KEY"
-
-# opBNB Testnet (chain 5611)
+# opBNB Testnet (chain 5611) — the chain the project is deployed on
 forge script script/Deploy.s.sol \
   --rpc-url opbnb_testnet \
   --broadcast \
   --verify \
   --etherscan-api-key "$BSCSCAN_API_KEY"
+
+# BNB Smart Chain Testnet (chain 97) — alternative target
+forge script script/Deploy.s.sol \
+  --rpc-url bnb_testnet \
+  --broadcast \
+  --verify \
+  --etherscan-api-key "$BSCSCAN_API_KEY"
 ```
 
-`--rpc-url bnb_testnet` uses the alias in `foundry.toml`, which reads `BNB_TESTNET_RPC_URL` from the
-environment. Verification is a separate concern: a `--verify` flag does not by itself prove the
-contract is verified — confirm on the explorer.
+Each `--rpc-url` alias in `foundry.toml` reads its URL from the environment. Verification is a
+separate concern: a `--verify` flag does not by itself prove the contract is verified — open the
+explorer and confirm the source tab is populated. The explorer for opBNB Testnet is
+`https://opbnb-testnet.bscscan.com`.
 
 For a local dry run against Anvil:
 

@@ -1,6 +1,6 @@
 # VeriPanen
 
-Harvest quality, recorded on-chain. **Indonesia Web3 Hackathon 2026 · Track 1 — AI Agents · BNB Smart Chain Testnet.**
+Harvest quality, recorded on-chain. **Indonesia Web3 Hackathon 2026 · Track 1 — AI Agents · opBNB Testnet.**
 
 ---
 
@@ -46,7 +46,7 @@ flowchart TD
     AG["AI Agent<br/>Node.js"]
     AI["Vision model<br/>9router gateway"]
     OR["Oracle wallet<br/>(server-side only)"]
-    SC["HarvestEscrow.sol<br/>BNB Smart Chain Testnet"]
+    SC["HarvestEscrow.sol<br/>opBNB Testnet"]
     IPFS["IPFS (Pinata)<br/>photos + reasoning"]
 
     F -->|"create listing, photo"| FE
@@ -82,10 +82,10 @@ are never collapsed into one.
 | Layer | Choice |
 | --- | --- |
 | Contract | Solidity 0.8.28, Foundry, OpenZeppelin `ReentrancyGuard` |
-| Chain | BNB Smart Chain Testnet (chain id 97, tBNB) |
+| Chain | opBNB Testnet (chain id 5611, tBNB). BNB Testnet (97) also supported. |
 | Agent | Node.js, Viem, OpenAI-compatible gateway client |
 | AI | Vision model via 9router gateway, strict JSON output |
-| Storage | IPFS via Pinata (hash always on-chain) |
+| Storage | Local file store by default; IPFS via Pinata when `PINATA_JWT` is set. The hash is always on-chain. |
 | Frontend | React 19, Vite, Wagmi v2, RainbowKit, Viem, Tailwind v4, Motion |
 
 ## Repository structure
@@ -125,7 +125,9 @@ veripanen/
 
 - [Foundry](https://book.getfoundry.sh/getting-started/installation) (`forge`, `cast`, `anvil`)
 - Node.js 20+
-- A wallet with BNB Testnet tBNB from the [faucet](https://www.bnbchain.org/en/testnet-faucet)
+- A wallet with testnet tBNB for the chain you deploy to — opBNB Testnet (5611) by default.
+  The [faucet](https://www.bnbchain.org/en/testnet-faucet) covers BNB Testnet (97); opBNB testnet
+  gas is cheap, so a small balance goes a long way.
 
 ### 1. Contract
 
@@ -137,18 +139,23 @@ forge build
 forge test
 ```
 
-### 2. Deploy to BNB Testnet
+### 2. Deploy to opBNB Testnet
 
 ```bash
 cd contract
 source .env
 forge script script/Deploy.s.sol \
-  --rpc-url "$BNB_TESTNET_RPC_URL" \
+  --rpc-url opbnb_testnet \
   --broadcast \
-  --verify
+  --verify \
+  --etherscan-api-key "$BSCSCAN_API_KEY"
 ```
 
-Record the printed contract address. Put it into both `.env` files below.
+`opbnb_testnet` and `bnb_testnet` are the RPC aliases in `contract/foundry.toml`; each reads its URL
+from the environment. For BNB Testnet (97) swap `--rpc-url opbnb_testnet` for `--rpc-url bnb_testnet`.
+
+A `--verify` flag does not by itself prove the source is verified — open the explorer and confirm.
+Record the printed contract address and put it into both `.env` files below.
 
 ### 3. Agent
 
@@ -167,7 +174,8 @@ Fill in:
 | `GLM_MODELS` | Comma-separated model list (rotated when one is unavailable) |
 | `ORACLE_PRIVATE_KEY` | Oracle wallet key — **server-side only, never in the frontend** |
 | `CONTRACT_ADDRESS` | Deployed escrow address |
-| `BNB_TESTNET_RPC_URL` | RPC endpoint |
+| `BNB_TESTNET_RPC_URL` | RPC endpoint (name is historical — point it at opBNB or BNB Testnet) |
+| `CHAIN_ID` | Chain id that must match the RPC: `5611` for opBNB, `97` for BNB Testnet |
 | `PINATA_JWT` | Pinata token for real IPFS pinning |
 | `MIN_CONFIDENCE` | Reject-and-log threshold (default 70) |
 
@@ -190,7 +198,7 @@ node src/cli.js verify --id 1 --delivery ./delivered.jpg
 ```bash
 cd frontend
 npm install
-cp .env.example .env    # fill VITE_CONTRACT_ADDRESS, VITE_AGENT_URL
+cp .env.example .env    # fill VITE_CONTRACT_ADDRESS, VITE_AGENT_URL, VITE_CHAIN_ID
 npm run dev             # http://localhost:5173
 ```
 
@@ -297,6 +305,35 @@ Local (Anvil):0x5FbDB2315678afecb367f032d93F642f64180aa3   (chain 31337, develop
 9. Anyone, without a wallet, opens **Public ledger** and inspects every listing, every grade,
    every verification, and the full event timeline — read straight from the chain.
 
+## Verified end-to-end (opBNB Testnet)
+
+The escrow lifecycle has been run end to end against the deployed contract on opBNB Testnet, with
+real transactions at the submitted address:
+
+| Step | Function | Caller |
+| --- | --- | --- |
+| 1 | `createListing` | farmer |
+| 2 | `postGrade` | oracle |
+| 3 | `fundEscrow` | buyer |
+| 4 | `markShipped` | farmer |
+| 5 | `postDeliveryVerification` | oracle |
+
+Result: `Completed`, payment released to the farmer.
+
+Reproduce it against any public testnet:
+
+```bash
+cd agent
+# agent/.env: CHAIN_ID=5611, BNB_TESTNET_RPC_URL=<opBNB RPC>,
+#             CONTRACT_ADDRESS, ORACLE_PRIVATE_KEY, DEMO_FARMER_KEY, DEMO_BUYER_KEY
+node scripts/testnet-demo.js
+```
+
+The script refuses to run on Anvil (`31337`) and on any mainnet chain id, and checks up front that
+`ORACLE_PRIVATE_KEY` matches the contract's oracle. Output is written to
+`agent/evidence/opbnb-demo-5611.json`. The five transactions above are the deterministic part of the
+demo video, so no AI key is needed to reproduce them.
+
 ## Verified end-to-end (local chain)
 
 Every scenario below was run against a real contract with real transactions. The script is
@@ -332,6 +369,9 @@ The AI stages were exercised with the live model as well:
 
 - **Oracle-gated writes.** Only the configured oracle address can post grades or verifications.
   The owner cannot forge AI results — only replace the oracle itself.
+- **Deployed contract.** The oracle is set in the constructor and is the only address able to call
+  `postGrade` / `postDeliveryVerification`; `setOracle` is `onlyOwner`. The owner key is not held by
+  the frontend and never signs on a user's behalf.
 - **Grade immutability.** `postGrade` requires `Created`; once posted the status becomes `Graded`
   and no second grade can overwrite it.
 - **Checks-effects-interactions + `nonReentrant`.** Every function that transfers value updates
@@ -396,9 +436,9 @@ The app shows the same guidance inline when it detects `nonce too low`, `nonce t
 ### "Invalid parameters were provided to the RPC method"
 
 This generic MetaMask message almost always means the wallet is on the wrong chain. Confirm both the
-app and the wallet point at the same network (local Anvil `31337`, opBNB Testnet `5611`, or BNB
-Testnet `97`), then retry.
+app and the wallet point at the same network (opBNB Testnet `5611`, BNB Testnet `97`, or local
+Anvil `31337`), then retry.
 
 ## License
 
-MIT
+MIT — see [LICENSE](LICENSE).

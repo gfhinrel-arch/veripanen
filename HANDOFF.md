@@ -1,6 +1,6 @@
 # VeriPanen — Session Handoff / Transcript
 
-**Project:** VeriPanen — AI-graded agricultural escrow on BNB Smart Chain Testnet
+**Project:** VeriPanen — AI-graded agricultural escrow on opBNB Testnet (chain 5611)
 **Hackathon:** Indonesia Web3 Hackathon 2026, Track 1 (AI Agents)
 **Repo:** https://github.com/gfhinrel-arch/veripanen
 **Branch:** master
@@ -136,6 +136,32 @@ Evidence: `agent/evidence/anvil-demo.json`. Script: `agent/scripts/demo.js`.
 
 ---
 
+## 4.1 Submission hardening — verified on-chain evidence + docs alignment
+
+A review against the hackathon's submission requirements found three gaps: the deployed contract had
+no business transactions at the submitted address (only the deploy), no `LICENSE` file despite the
+README claiming MIT, and several docs still describing the project as BNB Testnet 97.
+
+What changed:
+
+| Item | Change |
+|---|---|
+| On-chain evidence | `agent/scripts/testnet-demo.js` + `agent/evidence/opbnb-demo-5611.json` |
+| License | `LICENSE` (MIT) added; README now links to it |
+| Chain identity | README header, architecture diagram, tech-stack table, deploy section, troubleshooting all now lead with opBNB 5611 |
+| Reproduce command | `npm run testnet-demo` from the repo root |
+
+The on-chain evidence is five transactions at
+`0xE07e56Af882368bc604F047Ed092A0C139c72809` — `createListing`, `postGrade`, `fundEscrow`,
+`markShipped`, `postDeliveryVerification` — ending in status `Completed`. Recorded from
+`eth_getLogs` and `getListing`; each hash is verifiable on
+https://opbnb-testnet.bscscan.com.
+
+**Still open:** source verification on BscScan (the explorer shows bytecode, not source), the demo
+video, and the team's own credentials.
+
+---
+
 ## 5. Environment
 
 | Item | Value |
@@ -226,8 +252,10 @@ MetaMask setup for local demo:
 | AI agent (both stages) | Done, live-verified on Anvil, 26/26 tests pass |
 | Frontend | Done, 16/16 tests, build clean |
 | End-to-end (Anvil) | Done, verified live in the browser |
-| **End-to-end (opBNB 5611)** | **Deployed; fund/ship/verify flow runs** |
+| **End-to-end (opBNB 5611)** | **DONE** — five transactions, listing 1 `Completed`, evidence committed |
 | Confidence threshold | **Current active: `MIN_CONFIDENCE=70`** (code default, `.env.example`, and local env files all agree). |
 | Wallet preflight | All 7 write paths guarded |
 | opBNB testnet deploy | **DONE** — `0xE07e56Af882368bc604F047Ed092A0C139c72809` |
-| **Overall** | **Demo-ready** — contract deployed, both AI stages live, full browser flow verified |
+| Source verified on BscScan | **Not yet** — bytecode deployed, source readable in the repo |
+| Demo video | **Not recorded** |
+| **Overall** | **Submission-ready pending video** — contract live and exercised on 5611, both AI stages live, full browser flow verified |
